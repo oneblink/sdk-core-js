@@ -1,3 +1,4 @@
+export * as resourceDefinitionTypes from './types/resource-definitions'
 /**
  * ## Form Elements Service
  *

@@ -261,7 +261,6 @@ describe('evaluateConditionalPredicate', () => {
       name: 'predicatePoint',
       label: 'predicatePoint',
       type: 'pointAddress',
-      environmentId: '1',
       required: false,
       conditionallyShow: false,
       isDataLookup: false,
