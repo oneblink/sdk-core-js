@@ -1,5 +1,5 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
-import { FormElementsCtrl } from '../types'
+import { FormElementsCtrl } from './types'
 import { flattenFormElements } from '../formElementsService'
 import conditionallyShowElement from './conditionallyShowElement'
 import conditionallyShowOption, {

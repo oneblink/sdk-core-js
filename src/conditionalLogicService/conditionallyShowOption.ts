@@ -1,6 +1,6 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate'
-import { FormElementsCtrl } from '../types'
+import { FormElementsCtrl } from './types'
 import { typeCastService } from '..'
 import conditionallyShowElement from './conditionallyShowElement'
 
