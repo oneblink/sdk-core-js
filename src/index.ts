@@ -98,3 +98,13 @@ export * as fileUploadService from './fileUploadService'
  * ```
  */
 export * as webhookSubscriptionService from './webhookSubscriptionService'
+/**
+ * ## SharePoint Service
+ *
+ * Helper functions for handling SharePoint
+ *
+ * ```js
+ * import { sharepointService } from '@oneblink/sdk-core'
+ * ```
+ */
+export * as sharepointService from './sharepointService'

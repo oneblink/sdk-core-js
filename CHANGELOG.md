@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `sharepointService`
+
 ## [7.3.2] - 2024-12-09
 
 ### Changed
