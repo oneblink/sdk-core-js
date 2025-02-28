@@ -109,3 +109,14 @@ export * as webhookSubscriptionService from './webhookSubscriptionService'
  * ```
  */
 export * as sharepointService from './sharepointService'
+
+/**
+ * ## Freshdesk Service
+ *
+ * Helper functions for handling Freshdesk
+ *
+ * ```js
+ * import { freshdeskService } from '@oneblink/sdk-core'
+ * ```
+ */
+export * as freshdeskService from './freshdeskService'
