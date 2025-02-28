@@ -1,4 +1,4 @@
-import { FreshdeskTypes, SubmissionEventTypes } from './typedoc'
+import { FreshdeskTypes, SubmissionEventTypes } from '@oneblink/types'
 import {
   ResourceDefinition,
   ResourceDefinitionChoice,
