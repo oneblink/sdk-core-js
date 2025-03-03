@@ -100,11 +100,17 @@ export function generateFreshdeskTicketFieldDefinitions(
         type: 'TEXT_SINGLE_LINE',
         ...baseField,
       })
-    } else if (freshdeskField.options && isChoiceField) {
+    } else if (
+      (freshdeskField.options || freshdeskField.choices) &&
+      isChoiceField
+    ) {
       memo.push({
         type: 'CHOICE_SINGLE',
         ...baseField,
-        choices: freshdeskField.options,
+        choices: transformFreshdeskChoicesIntoOptions(
+          freshdeskField.options,
+          freshdeskField.choices,
+        ),
         checkIsFormElementSupported(formElementWithOptions) {
           if (freshdeskField.type === 'nested_field') {
             return false
@@ -117,39 +123,39 @@ export function generateFreshdeskTicketFieldDefinitions(
       })
     } else if (
       freshdeskField.type === 'nested_field' &&
-      freshdeskField.options?.length
+      (freshdeskField.options?.length || freshdeskField.choices)
     ) {
-      const choices = freshdeskField.options.reduce<FreshdeskFieldCategory[]>(
-        (categoriesMemo, category) => {
-          const subCategories = category.options?.reduce<
-            FreshdeskFieldCategory['subCategories']
-          >((subCategoriesMemo, subCategory) => {
-            if (subCategory.options?.length) {
-              subCategoriesMemo.push({
-                value: subCategory.value,
-                label: subCategory.label,
-                items: subCategory.options.map(({ value, label }) => ({
-                  value,
-                  label,
-                })),
-              })
-            }
-
-            return subCategoriesMemo
-          }, [])
-
-          if (subCategories?.length) {
-            categoriesMemo.push({
-              value: category.value,
-              label: category.label,
-              subCategories,
+      const choices = transformFreshdeskChoicesIntoOptions(
+        freshdeskField.options,
+        freshdeskField.choices,
+      ).reduce<FreshdeskFieldCategory[]>((categoriesMemo, category) => {
+        const subCategories = category.options?.reduce<
+          FreshdeskFieldCategory['subCategories']
+        >((subCategoriesMemo, subCategory) => {
+          if (subCategory.options?.length) {
+            subCategoriesMemo.push({
+              value: subCategory.value,
+              label: subCategory.label,
+              items: subCategory.options.map(({ value, label }) => ({
+                value,
+                label,
+              })),
             })
           }
 
-          return categoriesMemo
-        },
-        [],
-      )
+          return subCategoriesMemo
+        }, [])
+
+        if (subCategories?.length) {
+          categoriesMemo.push({
+            value: category.value,
+            label: category.label,
+            subCategories,
+          })
+        }
+
+        return categoriesMemo
+      }, [])
 
       if (choices.length) {
         memo.push({
@@ -162,4 +168,57 @@ export function generateFreshdeskTicketFieldDefinitions(
 
     return memo
   }, [])
+}
+
+/**
+ * This internal function is used to decide if `options` or `choices` should be
+ * used. If there is no `options` parameter passed in, it will use the `choices`
+ * configuration to create the options required for the options required.
+ *
+ * @param options
+ * @param choices
+ * @returns
+ */
+function transformFreshdeskChoicesIntoOptions(
+  options: FreshdeskTypes.FreshdeskFieldOption[] | undefined,
+  choices: FreshdeskTypes.FreshdeskField['choices'],
+): FreshdeskTypes.FreshdeskFieldOption[] {
+  if (options) {
+    return options
+  }
+  if (choices) {
+    if (Array.isArray(choices)) {
+      return choices.map((choice) => ({
+        label: choice,
+        value: choice,
+      }))
+    } else if (typeof choices === 'object') {
+      return Object.entries(choices).map(([key, value]) => {
+        if (typeof value === 'number') {
+          return {
+            label: key,
+            value,
+          }
+        } else if (Array.isArray(value)) {
+          return {
+            label: value[0],
+            value: parseInt(key),
+          }
+        }
+        return {
+          label: key,
+          value: key,
+          options: Object.entries(value).map(([subCategory, items]) => ({
+            label: subCategory,
+            value: subCategory,
+            options: items.map((item) => ({
+              label: item,
+              value: item,
+            })),
+          })),
+        }
+      })
+    }
+  }
+  return []
 }

@@ -240,4 +240,140 @@ describe('generateFreshdeskTicketFieldDefinitions', () => {
       },
     ])
   })
+
+  it('should return the correct value when choices is used over options', () => {
+    const fields: FreshdeskTypes.FreshdeskField[] = [
+      //@ts-expect-error Not filling in all properties
+      {
+        id: 3,
+        name: 'Field3',
+        type: 'custom_dropdown',
+        label_for_customers: 'Field 3',
+        required_for_customers: true,
+        choices: ['value 1', 'value 2'],
+      },
+    ]
+    expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
+      {
+        checkIsFormElementSupported: expect.any(Function),
+        choices: [
+          {
+            label: 'value 1',
+            value: 'value 1',
+          },
+          {
+            label: 'value 2',
+            value: 'value 2',
+          },
+        ],
+        displayName: 'Field 3',
+        freshdeskFieldName: 'Field3',
+        id: '3',
+        isRequired: true,
+        type: 'CHOICE_SINGLE',
+      },
+    ])
+  })
+
+  it('should map DEPENDENT_FIELD field correctly when choices is used', () => {
+    const fields: FreshdeskTypes.FreshdeskField[] = [
+      //@ts-expect-error Not filling in all properties
+      {
+        id: 8,
+        name: 'Field8',
+        type: 'nested_field',
+        label_for_customers: 'Field 8',
+        required_for_customers: true,
+        choices: {
+          AUS: {
+            NSW: ['Sydney', 'Gosford'],
+            QLD: ['Brisbane', 'Gold Coast'],
+          },
+          USA: {
+            Texas: ['Austin', 'Dallas'],
+            Kansas: ['Kansas City', 'Manhattan'],
+          },
+        },
+      },
+    ]
+    expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
+      {
+        choices: [
+          {
+            label: 'AUS',
+            subCategories: [
+              {
+                items: [
+                  {
+                    label: 'Sydney',
+                    value: 'Sydney',
+                  },
+                  {
+                    label: 'Gosford',
+                    value: 'Gosford',
+                  },
+                ],
+                label: 'NSW',
+                value: 'NSW',
+              },
+              {
+                items: [
+                  {
+                    label: 'Brisbane',
+                    value: 'Brisbane',
+                  },
+                  {
+                    label: 'Gold Coast',
+                    value: 'Gold Coast',
+                  },
+                ],
+                label: 'QLD',
+                value: 'QLD',
+              },
+            ],
+            value: 'AUS',
+          },
+          {
+            label: 'USA',
+            subCategories: [
+              {
+                items: [
+                  {
+                    label: 'Austin',
+                    value: 'Austin',
+                  },
+                  {
+                    label: 'Dallas',
+                    value: 'Dallas',
+                  },
+                ],
+                label: 'Texas',
+                value: 'Texas',
+              },
+              {
+                items: [
+                  {
+                    label: 'Kansas City',
+                    value: 'Kansas City',
+                  },
+                  {
+                    label: 'Manhattan',
+                    value: 'Manhattan',
+                  },
+                ],
+                label: 'Kansas',
+                value: 'Kansas',
+              },
+            ],
+            value: 'USA',
+          },
+        ],
+        displayName: 'Field 8',
+        freshdeskFieldName: 'Field8',
+        id: '8',
+        isRequired: true,
+        type: 'DEPENDENT_FIELD',
+      },
+    ])
+  })
 })
