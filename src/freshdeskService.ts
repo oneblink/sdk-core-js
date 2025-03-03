@@ -171,15 +171,15 @@ export function generateFreshdeskTicketFieldDefinitions(
 }
 
 /**
- * This internal function is used to decide if `options` or `choices` should be
- * used. If there is no `options` parameter passed in, it will use the `choices`
+ * This function is used to decide if `options` or `choices` should be used. If
+ * there is no `options` parameter passed in, it will use the `choices`
  * configuration to create the options required for the options required.
  *
  * @param options
  * @param choices
  * @returns
  */
-function transformFreshdeskChoicesIntoOptions(
+export function transformFreshdeskChoicesIntoOptions(
   options: FreshdeskTypes.FreshdeskFieldOption[] | undefined,
   choices: FreshdeskTypes.FreshdeskField['choices'],
 ): FreshdeskTypes.FreshdeskFieldOption[] {
