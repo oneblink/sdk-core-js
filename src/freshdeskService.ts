@@ -168,12 +168,10 @@ export function generateFreshdeskTicketFieldDefinitions(
 }
 
 /**
- * This function is used to decide if `options` or `choices` should be used. If
- * there is no `options` parameter passed in, it will use the `choices`
- * configuration to create the options required for the options required.
+ * This function is used to transform the `choices` property into the `options`
+ * property for freshdesk fields.
  *
- * @param options
- * @param choices
+ * @param fields
  * @returns
  */
 export function setFreshdeskFieldOptions(

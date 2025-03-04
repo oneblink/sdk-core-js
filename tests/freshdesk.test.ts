@@ -1,5 +1,9 @@
-import { generateFreshdeskTicketFieldDefinitions } from '../src/freshdeskService'
+import {
+  generateFreshdeskTicketFieldDefinitions,
+  setFreshdeskFieldOptions,
+} from '../src/freshdeskService'
 import { FreshdeskTypes } from '@oneblink/types'
+import freshdeskFieldFixture from './freshdeskFieldsFixture.json'
 
 describe('generateFreshdeskTicketFieldDefinitions', () => {
   it('should return an empty array when given an empty input', () => {
@@ -296,84 +300,17 @@ describe('generateFreshdeskTicketFieldDefinitions', () => {
         },
       },
     ]
-    expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
-      {
-        choices: [
-          {
-            label: 'AUS',
-            subCategories: [
-              {
-                items: [
-                  {
-                    label: 'Sydney',
-                    value: 'Sydney',
-                  },
-                  {
-                    label: 'Gosford',
-                    value: 'Gosford',
-                  },
-                ],
-                label: 'NSW',
-                value: 'NSW',
-              },
-              {
-                items: [
-                  {
-                    label: 'Brisbane',
-                    value: 'Brisbane',
-                  },
-                  {
-                    label: 'Gold Coast',
-                    value: 'Gold Coast',
-                  },
-                ],
-                label: 'QLD',
-                value: 'QLD',
-              },
-            ],
-            value: 'AUS',
-          },
-          {
-            label: 'USA',
-            subCategories: [
-              {
-                items: [
-                  {
-                    label: 'Austin',
-                    value: 'Austin',
-                  },
-                  {
-                    label: 'Dallas',
-                    value: 'Dallas',
-                  },
-                ],
-                label: 'Texas',
-                value: 'Texas',
-              },
-              {
-                items: [
-                  {
-                    label: 'Kansas City',
-                    value: 'Kansas City',
-                  },
-                  {
-                    label: 'Manhattan',
-                    value: 'Manhattan',
-                  },
-                ],
-                label: 'Kansas',
-                value: 'Kansas',
-              },
-            ],
-            value: 'USA',
-          },
-        ],
-        displayName: 'Field 8',
-        freshdeskFieldName: 'Field8',
-        id: '8',
-        isRequired: true,
-        type: 'DEPENDENT_FIELD',
-      },
-    ])
+    expect(generateFreshdeskTicketFieldDefinitions(fields)).toMatchSnapshot()
+  })
+})
+
+describe('setFreshdeskFieldOptions', () => {
+  it('should transform all of the fields correctly', () => {
+    const freshdeskFields = setFreshdeskFieldOptions(
+      freshdeskFieldFixture as FreshdeskTypes.FreshdeskField[],
+    )
+    expect(freshdeskFields).toMatchSnapshot()
+
+    expect(setFreshdeskFieldOptions(freshdeskFields)).toMatchSnapshot()
   })
 })
