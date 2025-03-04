@@ -1,5 +1,9 @@
-import { generateFreshdeskTicketFieldDefinitions } from '../src/freshdeskService'
+import {
+  generateFreshdeskTicketFieldDefinitions,
+  setFreshdeskFieldOptions,
+} from '../src/freshdeskService'
 import { FreshdeskTypes } from '@oneblink/types'
+import freshdeskFieldFixture from './freshdeskFieldsFixture.json'
 
 describe('generateFreshdeskTicketFieldDefinitions', () => {
   it('should return an empty array when given an empty input', () => {
@@ -239,5 +243,74 @@ describe('generateFreshdeskTicketFieldDefinitions', () => {
         type: 'DEPENDENT_FIELD',
       },
     ])
+  })
+
+  it('should return the correct value when choices is used over options', () => {
+    const fields: FreshdeskTypes.FreshdeskField[] = [
+      //@ts-expect-error Not filling in all properties
+      {
+        id: 3,
+        name: 'Field3',
+        type: 'custom_dropdown',
+        label_for_customers: 'Field 3',
+        required_for_customers: true,
+        choices: ['value 1', 'value 2'],
+      },
+    ]
+    expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
+      {
+        checkIsFormElementSupported: expect.any(Function),
+        choices: [
+          {
+            label: 'value 1',
+            value: 'value 1',
+          },
+          {
+            label: 'value 2',
+            value: 'value 2',
+          },
+        ],
+        displayName: 'Field 3',
+        freshdeskFieldName: 'Field3',
+        id: '3',
+        isRequired: true,
+        type: 'CHOICE_SINGLE',
+      },
+    ])
+  })
+
+  it('should map DEPENDENT_FIELD field correctly when choices is used', () => {
+    const fields: FreshdeskTypes.FreshdeskField[] = [
+      //@ts-expect-error Not filling in all properties
+      {
+        id: 8,
+        name: 'Field8',
+        type: 'nested_field',
+        label_for_customers: 'Field 8',
+        required_for_customers: true,
+        choices: {
+          AUS: {
+            NSW: ['Sydney', 'Gosford'],
+            QLD: ['Brisbane', 'Gold Coast'],
+          },
+          USA: {
+            Texas: ['Austin', 'Dallas'],
+            Kansas: ['Kansas City', 'Manhattan'],
+          },
+        },
+      },
+    ]
+    expect(generateFreshdeskTicketFieldDefinitions(fields)).toMatchSnapshot()
+  })
+})
+
+describe('setFreshdeskFieldOptions', () => {
+  it('should transform all of the fields correctly', () => {
+    const freshdeskFields = setFreshdeskFieldOptions(
+      freshdeskFieldFixture as FreshdeskTypes.FreshdeskField[],
+    )
+    expect(freshdeskFields).toMatchSnapshot()
+
+    expect(setFreshdeskFieldOptions(freshdeskFields)).toEqual(freshdeskFields)
   })
 })
