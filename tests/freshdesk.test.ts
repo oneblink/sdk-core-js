@@ -311,6 +311,6 @@ describe('setFreshdeskFieldOptions', () => {
     )
     expect(freshdeskFields).toMatchSnapshot()
 
-    expect(setFreshdeskFieldOptions(freshdeskFields)).toMatchSnapshot()
+    expect(setFreshdeskFieldOptions(freshdeskFields)).toEqual(freshdeskFields)
   })
 })
