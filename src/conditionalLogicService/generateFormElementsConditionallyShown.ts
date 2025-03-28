@@ -43,7 +43,7 @@ const handleConditionallyShowElement = (
   try {
     return conditionallyShowElement(formElementsCtrl, element, [])
   } catch (error) {
-    errorCallback && errorCallback(error as Error)
+    errorCallback?.(error as Error)
     return false
   }
 }
@@ -57,7 +57,7 @@ const handleConditionallyShowOption = (
   try {
     return conditionallyShowOption(formElementsCtrl, element, option, [])
   } catch (error) {
-    errorCallback && errorCallback(error as Error)
+    errorCallback?.(error as Error)
     return 'HIDE'
   }
 }

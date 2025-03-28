@@ -338,8 +338,8 @@ export const getDisplayDetailsFromFormSubmissionPayment = (
                 paymentTransaction.paymentTypeId === 1
                   ? 'Credit/Debit Card'
                   : paymentTransaction.paymentTypeId === 2
-                  ? 'ACH'
-                  : undefined,
+                    ? 'ACH'
+                    : undefined,
               creditCardMask: paymentTransaction.lastFour
                 ? `xxxx xxxx xxxx ${paymentTransaction.lastFour}`
                 : undefined,

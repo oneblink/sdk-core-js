@@ -4,12 +4,4 @@ module.exports = {
   testEnvironment: 'node',
   moduleDirectories: ['<rootDir>/src', 'node_modules'],
   roots: ['.', 'src'],
-  transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        isolatedModules: true,
-      },
-    ],
-  },
 }
