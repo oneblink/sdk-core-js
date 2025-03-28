@@ -25,6 +25,10 @@ export type ResourceDefinition<T> = T & {
         choices: ResourceDefinitionChoice[]
         checkIsFormElementSupported: (
           formElementWithOptions: FormTypes.FormElementWithOptions,
+          options: {
+            formElementOptionsSets: FormTypes.FormElementOptionSet[]
+            formsAppEnvironmentId: number
+          },
         ) => boolean
       }
   )

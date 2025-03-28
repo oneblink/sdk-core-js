@@ -44,8 +44,26 @@ export function generateSharepointColumnResourceDefinitions(
               label: choice,
               value: choice,
             })),
-            checkIsFormElementSupported() {
-              return false
+            checkIsFormElementSupported(
+              formElementWithOptions,
+              { formsAppEnvironmentId, formElementOptionsSets },
+            ) {
+              const formElementOptionsSetId =
+                formElementWithOptions.dynamicOptionSetId
+              return (
+                !!formElementOptionsSetId &&
+                formElementWithOptions.optionsType === 'DYNAMIC' &&
+                formElementOptionsSets.some((formElementOptionsSet) => {
+                  return (
+                    formElementOptionsSet.type === 'SHAREPOINT_LIST_COLUMN' &&
+                    formElementOptionsSet.environments.some(
+                      (env) =>
+                        env.formsAppEnvironmentId === formsAppEnvironmentId &&
+                        env.sharepointColumn.id === columnDefinition.id,
+                    )
+                  )
+                })
+              )
             },
           })
         } else if (columnDefinition.dateTime?.format === 'dateOnly') {
