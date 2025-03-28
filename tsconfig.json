@@ -15,7 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "inlineSources": true
+    "inlineSources": true,
+    "isolatedModules": true
   },
   "include": ["./src"],
   "typedocOptions": {
