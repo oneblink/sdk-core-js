@@ -71,7 +71,6 @@ describe('generateFreshdeskTicketFieldDefinitions', () => {
     ]
     expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
       {
-        checkIsFormElementSupported: expect.any(Function),
         choices: [
           {
             label: 'option 1',
@@ -259,7 +258,6 @@ describe('generateFreshdeskTicketFieldDefinitions', () => {
     ]
     expect(generateFreshdeskTicketFieldDefinitions(fields)).toEqual([
       {
-        checkIsFormElementSupported: expect.any(Function),
         choices: [
           {
             label: 'value 1',

@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-### Changed
+### Removed
 
-- **[BREAKING]** input parameters to `ResourceDefinition['checkIsFormElementSupported']` function.
+- **[BREAKING]** `ResourceDefinition['checkIsFormElementSupported']` property
 
 ## [7.4.0] - 2025-03-11
 

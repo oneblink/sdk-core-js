@@ -1,15 +1,22 @@
-import { FormTypes } from '@oneblink/types'
-
 export type ResourceDefinitionChoice = {
   value: string | number
   label: string
 }
 
-export type ResourceDefinition<T> = T & {
+type ResourceDefinitionBase = {
   id: string
   isRequired: boolean
   displayName: string
-} & (
+}
+
+export interface ResourceDefinitionWithChoices {
+  type: 'CHOICE_SINGLE' | 'CHOICE_MULTIPLE'
+  choices: ResourceDefinitionChoice[]
+}
+
+export type ResourceDefinition<T> = T &
+  ResourceDefinitionBase &
+  (
     | {
         type:
           | 'TEXT_SINGLE_LINE'
@@ -20,15 +27,5 @@ export type ResourceDefinition<T> = T & {
           | 'NUMBER'
           | 'BOOLEAN'
       }
-    | {
-        type: 'CHOICE_SINGLE' | 'CHOICE_MULTIPLE'
-        choices: ResourceDefinitionChoice[]
-        checkIsFormElementSupported: (
-          formElementWithOptions: FormTypes.FormElementWithOptions,
-          options: {
-            formElementOptionsSets: FormTypes.FormElementOptionSet[]
-            formsAppEnvironmentId: number
-          },
-        ) => boolean
-      }
+    | ResourceDefinitionWithChoices
   )

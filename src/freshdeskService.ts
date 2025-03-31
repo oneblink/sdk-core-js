@@ -106,15 +106,6 @@ export function generateFreshdeskTicketFieldDefinitions(
           type: 'CHOICE_SINGLE',
           ...baseField,
           choices: freshdeskField.options,
-          checkIsFormElementSupported(formElementWithOptions) {
-            if (freshdeskField.type === 'nested_field') {
-              return false
-            }
-
-            return (
-              formElementWithOptions.freshdeskFieldName === freshdeskField.name
-            )
-          },
         })
       } else if (
         freshdeskField.type === 'nested_field' &&
