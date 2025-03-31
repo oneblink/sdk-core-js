@@ -80,7 +80,6 @@ describe('generateSharepointColumnResourceDefinitions', () => {
           { label: 'A', value: 'A' },
           { label: 'B', value: 'B' },
         ],
-        checkIsFormElementSupported: expect.any(Function),
       },
     ])
   })
