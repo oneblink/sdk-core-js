@@ -74,7 +74,8 @@ const toLookupElement = (
     case 'autocomplete':
     case 'abn':
     case 'apiNSWLiquorLicence':
-    case 'googleAddress': {
+    case 'googleAddress':
+    case 'arcGISWebMap': {
       return e
     }
     default: {
@@ -197,7 +198,8 @@ const toAutoLookupElement = (e: FormTypes.FormElement) => {
     case 'compliance':
     case 'civicaStreetName':
     case 'autocomplete':
-    case 'apiNSWLiquorLicence': {
+    case 'apiNSWLiquorLicence':
+    case 'arcGISWebMap': {
       return e
     }
     default: {
