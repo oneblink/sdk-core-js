@@ -67,6 +67,7 @@ const toLookupElement = (
     case 'barcodeScanner':
     case 'email':
     case 'telephone':
+    case 'pointCadastralParcel':
     case 'pointAddress':
     case 'geoscapeAddress':
     case 'civicaStreetName':

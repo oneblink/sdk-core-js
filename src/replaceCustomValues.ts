@@ -440,6 +440,13 @@ function formatValue({
       }
       return undefined
     }
+    case 'pointCadastralParcel': {
+      const value = unknownValue as PointTypes.PointCadastralParcelResponse
+      return {
+        element: element,
+        value: value?.parcelBundle?.[0]?.parcelId,
+      }
+    }
     case 'pointAddress':
     case 'geoscapeAddress': {
       const value = unknownValue as
