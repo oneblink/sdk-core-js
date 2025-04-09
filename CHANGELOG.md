@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `typeCastService.toLookupElement` and `typeCastService.toAutoLookupElement` to include `arcGISWebMap`
 
+### Removed
+
+- `arcGISWebMap` from `formElementsService.infoPageElements`
+
 ## [8.0.0] - 2025-04-04
 
 ### Removed
