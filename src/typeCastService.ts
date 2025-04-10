@@ -194,6 +194,7 @@ const toAutoLookupElement = (e: FormTypes.FormElement) => {
     case 'boolean':
     case 'files':
     case 'location':
+    case 'pointCadastralParcel':
     case 'geoscapeAddress':
     case 'pointAddress':
     case 'compliance':
