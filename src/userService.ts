@@ -111,6 +111,10 @@ export function parseUserProfile(
       typeof jwtPayload['custom:department'] === 'string'
         ? jwtPayload['custom:department']
         : undefined,
+    division:
+      typeof jwtPayload['custom:division'] === 'string'
+        ? jwtPayload['custom:division']
+        : undefined,
     bargain:
       typeof jwtPayload['custom:bargain'] === 'string'
         ? jwtPayload['custom:bargain']
