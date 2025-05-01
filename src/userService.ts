@@ -42,6 +42,10 @@ export function parseUserProfile(
       typeof jwtPayload.given_name === 'string'
         ? jwtPayload.given_name
         : undefined,
+    middleName:
+      typeof jwtPayload.middle_name === 'string'
+        ? jwtPayload.middle_name
+        : undefined,
     lastName:
       typeof jwtPayload.family_name === 'string'
         ? jwtPayload.family_name
@@ -49,6 +53,8 @@ export function parseUserProfile(
     fullName: typeof jwtPayload.name === 'string' ? jwtPayload.name : undefined,
     picture:
       typeof jwtPayload.picture === 'string' ? jwtPayload.picture : undefined,
+    address:
+      typeof jwtPayload.address === 'string' ? jwtPayload.address : undefined,
     role:
       typeof jwtPayload['custom:role'] === 'string'
         ? jwtPayload['custom:role']
@@ -80,6 +86,46 @@ export function parseUserProfile(
     groups:
       typeof jwtPayload['custom:groups'] === 'string'
         ? jwtPayload['custom:groups'].split(',').map((group) => group.trim())
+        : undefined,
+    areaCode:
+      typeof jwtPayload['custom:area_code'] === 'string'
+        ? jwtPayload['custom:area_code']
+        : undefined,
+    city:
+      typeof jwtPayload['custom:city'] === 'string'
+        ? jwtPayload['custom:city']
+        : undefined,
+    state:
+      typeof jwtPayload['custom:state'] === 'string'
+        ? jwtPayload['custom:state']
+        : undefined,
+    country:
+      typeof jwtPayload['custom:country'] === 'string'
+        ? jwtPayload['custom:country']
+        : undefined,
+    countryCallingCode:
+      typeof jwtPayload['custom:country_calling_code'] === 'string'
+        ? jwtPayload['custom:country_calling_code']
+        : undefined,
+    department:
+      typeof jwtPayload['custom:department'] === 'string'
+        ? jwtPayload['custom:department']
+        : undefined,
+    bargain:
+      typeof jwtPayload['custom:bargain'] === 'string'
+        ? jwtPayload['custom:bargain']
+        : undefined,
+    employeeNumber:
+      typeof jwtPayload['custom:employee_number'] === 'string'
+        ? jwtPayload['custom:employee_number']
+        : undefined,
+    departmentHeadFullName:
+      typeof jwtPayload['custom:department_head_full_name'] === 'string'
+        ? jwtPayload['custom:department_head_full_name']
+        : undefined,
+    departmentHeadEmail:
+      typeof jwtPayload['custom:department_head_email'] === 'string'
+        ? jwtPayload['custom:department_head_email']
         : undefined,
   }
 
