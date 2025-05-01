@@ -23,7 +23,7 @@ describe('parseUserProfile', () => {
       middle_name: 'Q',
       family_name: 'Doe',
       name: 'John Q Doe',
-      picture: "https://example.com/pic.jpg",
+      picture: 'https://example.com/pic.jpg',
       address: '123 Main St',
     }
 
@@ -35,7 +35,7 @@ describe('parseUserProfile', () => {
     expect(result.middleName).toBe('Q')
     expect(result.lastName).toBe('Doe')
     expect(result.fullName).toBe('John Q Doe')
-    expect(result.picture).toBe("https://example.com/pic.jpg")
+    expect(result.picture).toBe('https://example.com/pic.jpg')
     expect(result.address).toBe('123 Main St')
     expect(result.username).toBe('test@example.com')
     expect(result.providerType).toBe('Cognito')
@@ -58,10 +58,11 @@ describe('parseUserProfile', () => {
       'custom:country': 'Testland',
       'custom:country_calling_code': '+99',
       'custom:department': 'Engineering',
+      'custom:division': 'Civil',
       'custom:bargain': 'None',
       'custom:employee_number': 'E123',
-      'custom:department_head_full_name': 'Head Honcho',
-      'custom:department_head_email': 'honcho@example.com',
+      'custom:departmenthead_name': 'Head Honcho',
+      'custom:departmenthead_email': 'honcho@example.com',
     }
 
     const result = parseUserProfile(payload)!
@@ -81,6 +82,7 @@ describe('parseUserProfile', () => {
     expect(result.countryCallingCode).toBe('+99')
     expect(result.department).toBe('Engineering')
     expect(result.bargain).toBe('None')
+    expect(result.division).toBe('Civil')
     expect(result.employeeNumber).toBe('E123')
     expect(result.departmentHeadFullName).toBe('Head Honcho')
     expect(result.departmentHeadEmail).toBe('honcho@example.com')

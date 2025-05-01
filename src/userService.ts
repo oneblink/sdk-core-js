@@ -124,12 +124,12 @@ export function parseUserProfile(
         ? jwtPayload['custom:employee_number']
         : undefined,
     departmentHeadFullName:
-      typeof jwtPayload['custom:department_head_full_name'] === 'string'
-        ? jwtPayload['custom:department_head_full_name']
+      typeof jwtPayload['custom:departmenthead_name'] === 'string'
+        ? jwtPayload['custom:departmenthead_name']
         : undefined,
     departmentHeadEmail:
-      typeof jwtPayload['custom:department_head_email'] === 'string'
-        ? jwtPayload['custom:department_head_email']
+      typeof jwtPayload['custom:departmenthead_email'] === 'string'
+        ? jwtPayload['custom:departmenthead_email']
         : undefined,
   }
 
