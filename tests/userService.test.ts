@@ -42,6 +42,18 @@ describe('parseUserProfile', () => {
     expect(result.isSAMLUser).toBe(false)
   })
 
+  it('should parse basic formatted address in JWT payload', () => {
+    const payload = {
+      sub: 'abc123',
+      address: {
+        formatted: '123 Main St',
+      },
+    }
+
+    const result = parseUserProfile(payload)!
+    expect(result.address).toBe('123 Main St')
+  })
+
   it('should parse custom claims correctly', () => {
     const payload = {
       sub: 'abc123',
