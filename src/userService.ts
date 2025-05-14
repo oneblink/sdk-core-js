@@ -84,6 +84,8 @@ export function parseUserProfile(
       jwtPayload['custom:departmenthead_name'],
     ),
     departmentHeadEmail: parseString(jwtPayload['custom:departmenthead_email']),
+    zipCode: parseString(jwtPayload['custom:zip_code']),
+    postalCode: parseString(jwtPayload['custom:postal_code']),
   }
 
   if (
