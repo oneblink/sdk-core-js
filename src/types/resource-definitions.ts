@@ -26,7 +26,7 @@ export type ResourceDefinition<T> = T &
           | 'DATETIME'
           | 'NUMBER'
           | 'BOOLEAN'
-          | 'SIGNATURE'
+          | 'IMAGE'
       }
     | ResourceDefinitionWithChoices
   )
