@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - `IMAGE` type to resource-definitions
+- zipCode and postalCode to user profile
 
 ## [8.2.0] - 2025-05-06
 
