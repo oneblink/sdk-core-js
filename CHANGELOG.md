@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- `SIGNATURE` type to resource-definitions
+- `IMAGE` type to resource-definitions
 
 ## [8.2.0] - 2025-05-06
 
