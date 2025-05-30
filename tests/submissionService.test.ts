@@ -8,6 +8,7 @@ import {
   replaceInjectablesWithSubmissionValues,
   getElementSubmissionValue,
   processInjectablesInCustomResource,
+  formatNumberAsCurrency,
 } from '../src/submissionService'
 
 describe('replaceInjectablesWithSubmissionValues()', () => {
@@ -898,5 +899,14 @@ describe('processInjectablesInCustomResource', () => {
     }, [])
 
     expect(result).toMatchSnapshot()
+  })
+})
+
+describe('formatNumberAsCurrency()', () => {
+  test('should format number as currency', () => {
+    const result = formatNumberAsCurrency(1000, {
+      locale: 'en-US',
+    })
+    expect(result).toEqual('$1,000.00')
   })
 })

@@ -61,3 +61,18 @@ export function getRootElementValueById(
     }
   }
 }
+
+export function formatNumberAsCurrency(
+  value: number,
+  options: { locale: 'en-AU' | 'en-US' },
+): string {
+  const currencyMap = {
+    'en-AU': 'AUD',
+    'en-US': 'USD',
+  }
+
+  return value.toLocaleString(options.locale, {
+    style: 'currency',
+    currency: currencyMap[options.locale],
+  })
+}
