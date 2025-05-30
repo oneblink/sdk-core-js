@@ -440,6 +440,14 @@ function formatValue({
       }
       return undefined
     }
+    case 'number': {
+      const value = unknownValue as number
+      if (element.isCurrency) {
+        return { element: element, value: formatCurrency(value) }
+      }
+      return { element: element, value: formatNumber(value) }
+    }
+
     case 'pointCadastralParcel': {
       const value = unknownValue as PointTypes.PointCadastralParcelResponse
       return {
