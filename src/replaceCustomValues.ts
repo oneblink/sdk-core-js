@@ -429,19 +429,20 @@ function formatValue({
     }
     case 'calculation':
     case 'number': {
+      const getValue = (value: number) => {
+        if (element.displayAsCurrency) {
+          return formatCurrency(value)
+        }
+        if (element.type === 'calculation') {
+          return formatNumber(value)
+        }
+        return value
+      }
+
       const value = unknownValue as number
       if (!Number.isNaN(value) && Number.isFinite(value)) {
-        let text
-        if (element.displayAsCurrency) {
-          text = formatCurrency(value)
-        } else {
-          text =
-            element.type === 'calculation'
-              ? formatNumber(value)
-              : // current behaviour in production
-                value
-        }
-        return { element: element, value: text }
+        const formattedValue = getValue(value)
+        return { element: element, value: formattedValue }
       }
       return undefined
     }
