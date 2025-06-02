@@ -439,7 +439,7 @@ function formatValue({
             element.type === 'calculation'
               ? formatNumber(value)
               : // current behaviour in production
-                value.toString()
+                value
         }
         return { element: element, value: text }
       }
