@@ -435,7 +435,11 @@ function formatValue({
         if (element.displayAsCurrency) {
           text = formatCurrency(value)
         } else {
-          text = formatNumber(value)
+          text =
+            element.type === 'calculation'
+              ? formatNumber(value)
+              : // current behaviour in production
+                value.toString()
         }
         return { element: element, value: text }
       }

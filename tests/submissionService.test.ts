@@ -159,7 +159,10 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         style: 'currency',
         currency: 'AUD',
       }),
-    formatNumber: (value: number) => value.toString(),
+    formatNumber: (value: number) =>
+      value.toLocaleString('en-AU', {
+        style: 'decimal',
+      }),
     userProfile: {
       userId: '1',
       username: 'person1',
