@@ -99,6 +99,42 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         isElementLookup: false,
         isDataLookup: false,
       },
+      {
+        id: 'fbad2d53-ddf3-419d-8ff7-e9ef21167555',
+        name: 'number1',
+        type: 'number',
+        label: 'Number 1',
+        displayAsCurrency: true,
+        isSlider: false,
+        minNumber: 0,
+        maxNumber: 100,
+        sliderIncrement: 1,
+        isInteger: false,
+        conditionallyShow: false,
+        requiresAllConditionallyShowPredicates: false,
+        isElementLookup: false,
+        isDataLookup: false,
+        required: false,
+        requiredMessage: undefined,
+      },
+      {
+        id: 'fbad2d53-ddf3-419d-8ff7-e9ef21167666',
+        name: 'number2',
+        type: 'number',
+        label: 'Number 2',
+        displayAsCurrency: false,
+        isSlider: false,
+        minNumber: 0,
+        maxNumber: 100,
+        sliderIncrement: 1,
+        isInteger: false,
+        conditionallyShow: false,
+        requiresAllConditionallyShowPredicates: false,
+        isElementLookup: false,
+        isDataLookup: false,
+        required: false,
+        requiredMessage: undefined,
+      },
     ],
     isAuthenticated: false,
     isMultiPage: false,
@@ -118,8 +154,12 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
     formatDate: () => '',
     formatDateTime: () => '',
     formatTime: () => '',
-    formatCurrency: () => '',
-    formatNumber: () => '',
+    formatCurrency: (value: number) =>
+      value.toLocaleString('en-AU', {
+        style: 'currency',
+        currency: 'AUD',
+      }),
+    formatNumber: (value: number) => value.toString(),
     userProfile: {
       userId: '1',
       username: 'person1',
@@ -208,6 +248,30 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
       })
       expect(result).toEqual({
         text,
+        hadAllInjectablesReplaced: true,
+      })
+    })
+
+    test('should display number as currency if displayAsCurrency is true', () => {
+      const text = '{ELEMENT:number1}'
+      const result = replaceInjectablesWithSubmissionValues(text, {
+        ...baseOptions,
+        submission: { number1: 1234.56 },
+      })
+      expect(result).toEqual({
+        text: '$1,234.56',
+        hadAllInjectablesReplaced: true,
+      })
+    })
+
+    test('should display number as number if displayAsCurrency is false', () => {
+      const text = '{ELEMENT:number2}'
+      const result = replaceInjectablesWithSubmissionValues(text, {
+        ...baseOptions,
+        submission: { number2: 1234.56 },
+      })
+      expect(result).toEqual({
+        text: '1234.56',
         hadAllInjectablesReplaced: true,
       })
     })
