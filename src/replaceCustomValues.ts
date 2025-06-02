@@ -442,7 +442,7 @@ function formatValue({
       const value = unknownValue as number
       if (!Number.isNaN(value) && Number.isFinite(value)) {
         const formattedValue = getValue(value)
-        return { element: element, value: formattedValue }
+        return { element, value: formattedValue }
       }
       return undefined
     }
