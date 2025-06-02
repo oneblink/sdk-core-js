@@ -442,7 +442,7 @@ function formatValue({
     }
     case 'number': {
       const value = unknownValue as number
-      if (element.isCurrency) {
+      if (element.displayAsCurrency) {
         return { element: element, value: formatCurrency(value) }
       }
       return { element: element, value: formatNumber(value) }
