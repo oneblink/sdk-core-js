@@ -427,7 +427,8 @@ function formatValue({
       const value = unknownValue as boolean
       return { element: element, value: value ? 'Yes' : 'No' }
     }
-    case 'calculation': {
+    case 'calculation':
+    case 'number': {
       const value = unknownValue as number
       if (!Number.isNaN(value) && Number.isFinite(value)) {
         let text
@@ -440,14 +441,6 @@ function formatValue({
       }
       return undefined
     }
-    case 'number': {
-      const value = unknownValue as number
-      if (element.displayAsCurrency) {
-        return { element: element, value: formatCurrency(value) }
-      }
-      return { element: element, value: formatNumber(value) }
-    }
-
     case 'pointCadastralParcel': {
       const value = unknownValue as PointTypes.PointCadastralParcelResponse
       return {
