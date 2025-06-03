@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [8.4.0] - 2025-06-03
+
 ### Added
 
 - support for `displayAsCurrency` for number elements
