@@ -135,6 +135,32 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         required: false,
         requiredMessage: undefined,
       },
+      {
+        id: 'fbad2d53-ddf3-419d-8ff7-e9ef21167777',
+        name: 'radio',
+        type: 'radio',
+        label: 'Radio Buttons',
+        readOnly: false,
+        required: false,
+        conditionallyShow: false,
+        requiresAllConditionallyShowPredicates: false,
+        isElementLookup: false,
+        isDataLookup: false,
+        optionsType: 'CUSTOM',
+        buttons: false,
+        options: [
+          {
+            id: 'option1',
+            label: 'A',
+            value: '1',
+          },
+          {
+            id: 'option2',
+            label: 'B',
+            value: '2',
+          },
+        ],
+      },
     ],
     isAuthenticated: false,
     isMultiPage: false,
@@ -275,6 +301,30 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
       })
       expect(result).toEqual({
         text: '1234.56',
+        hadAllInjectablesReplaced: true,
+      })
+    })
+
+    test('should display label of radio button option', () => {
+      const text = '{ELEMENT:radio}'
+      const result = replaceInjectablesWithSubmissionValues(text, {
+        ...baseOptions,
+        submission: { radio: '1' }, // '1' corresponds to option with label 'A'
+      })
+      expect(result).toEqual({
+        text: 'A',
+        hadAllInjectablesReplaced: true,
+      })
+    })
+
+    test('should display value of radio button option if ELEMENT_VALUE is passed', () => {
+      const text = '{ELEMENT_VALUE:radio}'
+      const result = replaceInjectablesWithSubmissionValues(text, {
+        ...baseOptions,
+        submission: { radio: '1' }, // '1' corresponds to option with label 'A'
+      })
+      expect(result).toEqual({
+        text: '1',
         hadAllInjectablesReplaced: true,
       })
     })
@@ -691,6 +741,58 @@ describe('processInjectablesInCustomResource', () => {
           isElementLookup: false,
           isDataLookup: false,
         },
+        {
+          id: '95fa4c98-deb5-403b-a3ac-594dfcf645de',
+          name: 'nested_radio',
+          type: 'radio',
+          label: 'Nested Radio Buttons',
+          readOnly: false,
+          required: false,
+          conditionallyShow: false,
+          requiresAllConditionallyShowPredicates: false,
+          isElementLookup: false,
+          isDataLookup: false,
+          optionsType: 'CUSTOM',
+          buttons: false,
+          options: [
+            {
+              id: 'option1',
+              label: 'A',
+              value: '1',
+            },
+            {
+              id: 'option2',
+              label: 'B',
+              value: '2',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'fbad2d53-ddf3-419d-8ff7-e9ef21167777',
+      name: 'radio',
+      type: 'radio',
+      label: 'Radio Buttons',
+      readOnly: false,
+      required: false,
+      conditionallyShow: false,
+      requiresAllConditionallyShowPredicates: false,
+      isElementLookup: false,
+      isDataLookup: false,
+      optionsType: 'CUSTOM',
+      buttons: false,
+      options: [
+        {
+          id: 'option1',
+          label: 'A',
+          value: '1',
+        },
+        {
+          id: 'option2',
+          label: 'B',
+          value: '2',
+        },
       ],
     },
   ]
@@ -700,11 +802,14 @@ describe('processInjectablesInCustomResource', () => {
     Children: [
       {
         Child_Name: 'John',
+        nested_radio: '2', // '2' corresponds to option with label 'B'
       },
       {
         Child_Name: 'Jane',
+        nested_radio: '1', // '1' corresponds to option with label 'B'
       },
     ],
+    radio: '1', // '1' corresponds to option with label 'A'
   }
 
   const replaceRootInjectables = (
@@ -963,6 +1068,43 @@ describe('processInjectablesInCustomResource', () => {
 
       return [...memo, ...map.values()]
     }, [])
+
+    expect(result).toMatchSnapshot()
+  })
+
+  it('should replace ELEMENT_VALUE tokens correctly', () => {
+    const resource = '{ELEMENT_VALUE:radio}'
+    const result = processInjectablesInCustomResource({
+      resource,
+      submission,
+      formElements,
+      replaceRootInjectables,
+    })
+
+    expect(result).toMatchSnapshot()
+  })
+
+  it('should replace nested ELEMENT_VALUE tokens correctly', () => {
+    const resource = 'Nested: {ELEMENT_VALUE:Children|nested_radio}'
+    const result = processInjectablesInCustomResource({
+      resource,
+      submission,
+      formElements,
+      replaceRootInjectables,
+    })
+
+    expect(result).toMatchSnapshot()
+  })
+
+  it('should replace nested and root ELEMENT_VALUE tokens correctly', () => {
+    const resource =
+      'Nested: {ELEMENT_VALUE:Children|nested_radio} Root: {ELEMENT_VALUE:radio}'
+    const result = processInjectablesInCustomResource({
+      resource,
+      submission,
+      formElements,
+      replaceRootInjectables,
+    })
 
     expect(result).toMatchSnapshot()
   })

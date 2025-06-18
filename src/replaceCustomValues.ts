@@ -14,6 +14,8 @@ import {
   RootElementRegex,
   NestedElementRegex,
   matchElementsTagRegex,
+  RootSubmissionValueElementRegex,
+  NestedSubmissionValueElementRegex,
 } from './form-elements-regex'
 import { findFormElement, flattenFormElements } from './formElementsService'
 
@@ -175,6 +177,7 @@ export function getElementSubmissionValue({
   propertyName,
   submission,
   formElements,
+  useSubmissionValue,
   formatDate,
   formatDateTime,
   formatTime,
@@ -184,6 +187,7 @@ export function getElementSubmissionValue({
   propertyName: string
   formElements: FormTypes.FormElement[]
   submission: SubmissionTypes.S3SubmissionData['submission']
+  useSubmissionValue?: boolean
 } & ReplaceInjectablesFormatters):
   | {
       element: FormTypes.FormElement | undefined
@@ -194,6 +198,7 @@ export function getElementSubmissionValue({
   elementId,
   submission,
   formElements,
+  useSubmissionValue,
   formatDate,
   formatDateTime,
   formatTime,
@@ -203,6 +208,7 @@ export function getElementSubmissionValue({
   elementId: string
   formElements: FormTypes.FormElement[]
   submission: SubmissionTypes.S3SubmissionData['submission']
+  useSubmissionValue?: boolean
 } & ReplaceInjectablesFormatters):
   | {
       element: FormTypes.FormElement | undefined
@@ -214,6 +220,7 @@ export function getElementSubmissionValue({
   propertyName,
   submission,
   formElements,
+  useSubmissionValue,
   formatDate,
   formatDateTime,
   formatTime,
@@ -224,6 +231,7 @@ export function getElementSubmissionValue({
   propertyName?: string
   formElements: FormTypes.FormElement[]
   submission: SubmissionTypes.S3SubmissionData['submission']
+  useSubmissionValue?: boolean
 } & ReplaceInjectablesFormatters) {
   if (elementId === undefined && propertyName === undefined) {
     return undefined
@@ -231,7 +239,6 @@ export function getElementSubmissionValue({
 
   let result: ReturnType<typeof getElementSubmissionValueByName> | undefined =
     undefined
-
   if (elementId) {
     result = getElementSubmissionValueById({
       elementId,
@@ -245,13 +252,13 @@ export function getElementSubmissionValue({
       submission,
     })
   }
-
   if (!result) {
     return
   }
   return formatValue({
     element: result.formElement,
     unknownValue: result.unknownValue,
+    useSubmissionValue,
     formatDate,
     formatTime,
     formatDateTime,
@@ -300,12 +307,10 @@ function getElementSubmissionValueById({
   if (Object(submission) !== submission) {
     return undefined
   }
-
   const flattenedElements = flattenFormElements(formElements)
 
   let unknown: unknown = undefined
   let formElement: FormTypes.FormElement | undefined = undefined
-
   for (const element of flattenedElements) {
     if (elementId === element.id) {
       if ('name' in element) {
@@ -330,7 +335,6 @@ function getElementSubmissionValueById({
       }
     }
   }
-
   if (unknown === undefined || unknown === null || formElement === undefined) {
     return undefined
   }
@@ -341,6 +345,7 @@ function getElementSubmissionValueById({
 function formatValue({
   element,
   unknownValue,
+  useSubmissionValue,
   formatDate,
   formatTime,
   formatDateTime,
@@ -349,6 +354,7 @@ function formatValue({
 }: {
   element: FormTypes.FormElement | undefined
   unknownValue: unknown
+  useSubmissionValue?: boolean
 } & ReplaceInjectablesFormatters) {
   switch (element?.type) {
     case 'datetime': {
@@ -366,12 +372,18 @@ function formatValue({
     case 'radio':
     case 'autocomplete': {
       const value = unknownValue as string
+      if (useSubmissionValue) {
+        return { element: element, value: value }
+      }
       const option = element.options?.find((opt) => opt.value === value)
       return { element: element, value: option?.label || value }
     }
 
     case 'checkboxes': {
       const value = unknownValue as string[]
+      if (useSubmissionValue) {
+        return { element: element, value: value }
+      }
       const options = element.options
       const selectedOptionLabels: string[] = value.reduce(
         (labels: string[], selectedOption: string) => {
@@ -390,6 +402,9 @@ function formatValue({
       const value = unknownValue as {
         value?: string
       }
+      if (useSubmissionValue) {
+        return { element: element, value: value.value }
+      }
       const option = (element.options || []).find(
         (option: FormTypes.ChoiceElementOption) => option.value === value.value,
       )
@@ -404,6 +419,9 @@ function formatValue({
     case 'select': {
       if (element.multi) {
         const value = unknownValue as string[]
+        if (useSubmissionValue) {
+          return { element: element, value: value }
+        }
         const options = element.options
         const selectedOptionLabels: string[] = value.reduce(
           (labels: string[], selectedOption: string) => {
@@ -419,6 +437,9 @@ function formatValue({
         }
       } else {
         const value = unknownValue as string
+        if (useSubmissionValue) {
+          return { element: element, value: value }
+        }
         const option = element.options?.find((opt) => opt.value === value)
         return { element: element, value: option?.label }
       }
@@ -599,6 +620,37 @@ export function replaceInjectablesWithElementValues(
           ...options,
         })
 
+        const hasNoValue = result === undefined || result.value === undefined
+        if (hasNoValue) {
+          hadAllInjectablesReplaced = false
+        }
+
+        text = text.replace(
+          elementMatch,
+          hasNoValue ? '' : (result.value as string),
+        )
+      },
+    )
+  }
+
+  const valueMatchesElement = text.match(
+    options.excludeNestedElements
+      ? RootSubmissionValueElementRegex
+      : NestedSubmissionValueElementRegex,
+  )
+  if (valueMatchesElement) {
+    matchElementsTagRegex(
+      {
+        text,
+        excludeNestedElements: !!options.excludeNestedElements,
+        useSubmissionValue: true,
+      },
+      ({ elementName, elementMatch }) => {
+        const result = getElementSubmissionValue({
+          propertyName: elementName,
+          ...options,
+          useSubmissionValue: true,
+        })
         const hasNoValue = result === undefined || result.value === undefined
         if (hasNoValue) {
           hadAllInjectablesReplaced = false
@@ -913,7 +965,74 @@ export function processInjectablesInCustomResource<T>({
         }
       }
     })
-  } else {
+  }
+
+  // Find nested form elements using ELEMENT_VALUE:
+  const valueMatches: Map<string, boolean> = new Map()
+  matchElementsTagRegex(
+    {
+      text,
+      excludeNestedElements: false,
+      useSubmissionValue: true,
+    },
+    ({ elementName }) => {
+      const [repeatableSetElementName, ...elementNames] = elementName.split('|')
+      valueMatches.set(repeatableSetElementName, !!elementNames.length)
+    },
+  )
+
+  if (valueMatches.size) {
+    valueMatches.forEach((hasNestedFormElements, repeatableSetElementName) => {
+      if (hasNestedFormElements) {
+        // Attempt to create a new resource for each entry in the repeatable set.
+        const entries = submission?.[repeatableSetElementName]
+        if (Array.isArray(entries)) {
+          const repeatableSetElement = findFormElement(
+            formElements,
+            (formElement) => {
+              return (
+                'name' in formElement &&
+                formElement.name === repeatableSetElementName
+              )
+            },
+          )
+          if (
+            repeatableSetElement &&
+            'elements' in repeatableSetElement &&
+            Array.isArray(repeatableSetElement.elements)
+          ) {
+            for (const entry of entries) {
+              const replacedResource = prepareNestedInjectables(
+                newResource,
+                (resourceText) => {
+                  return resourceText.replaceAll(
+                    `{ELEMENT_VALUE:${repeatableSetElementName}|`,
+                    '{ELEMENT_VALUE:',
+                  )
+                },
+              )
+              const nestedResources = processInjectablesInCustomResource<T>({
+                resource: replacedResource,
+                submission: entry,
+                formElements: repeatableSetElement.elements,
+                replaceRootInjectables,
+                prepareNestedInjectables,
+              })
+              if (nestedResources.size) {
+                nestedResources.forEach((nestedResource, nestedResourceKey) => {
+                  if (!newResources.has(nestedResourceKey)) {
+                    newResources.set(nestedResourceKey, nestedResource)
+                  }
+                })
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+
+  if (!matches.size && !valueMatches.size) {
     newResources.set(resourceKey, newResource)
   }
 

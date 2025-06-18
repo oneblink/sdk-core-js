@@ -78,3 +78,23 @@ Map {
   "No injectables here" => "No injectables here",
 }
 `;
+
+exports[`processInjectablesInCustomResource should replace ELEMENT_VALUE tokens correctly 1`] = `
+Map {
+  "1" => "1",
+}
+`;
+
+exports[`processInjectablesInCustomResource should replace nested ELEMENT_VALUE tokens correctly 1`] = `
+Map {
+  "Nested: 2" => "Nested: 2",
+  "Nested: 1" => "Nested: 1",
+}
+`;
+
+exports[`processInjectablesInCustomResource should replace nested and root ELEMENT_VALUE tokens correctly 1`] = `
+Map {
+  "Nested: 2 Root: 1" => "Nested: 2 Root: 1",
+  "Nested: 1 Root: 1" => "Nested: 1 Root: 1",
+}
+`;
