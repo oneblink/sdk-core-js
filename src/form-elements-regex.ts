@@ -13,6 +13,20 @@ export const RootElementRegex = /({ELEMENT:)([^|}]+)(})/g
 export const NestedElementRegex = /({ELEMENT:)([^}]+)(})/g
 
 /**
+ * The regex used for matching `{ELEMENT_VALUE:<elementName>}` tags in the OneBlink
+ * platform. Ignores nested elements based on the '|' character. Will match
+ * `"{ELEMENT_VALUE:Parent_Name}"` but will NOT match `"{ELEMENT_VALUE:Children|Name}"`.
+ */
+export const RootSubmissionValueElementRegex = /({ELEMENT_VALUE:)([^|}]+)(})/g
+/**
+ * The regex used for matching `{ELEMENT_VALUE:<elementName>|<nestedElementName>}`
+ * tags in the OneBlink platform. Includes nested elements based on the '|'
+ * character. {ELEMENT_VALUE:Children|Name} would be matched. Will match
+ * `"{ELEMENT_VALUE:Parent_Name}"` and `"{ELEMENT_VALUE:Children|Name}"`.
+ */
+export const NestedSubmissionValueElementRegex = /({ELEMENT_VALUE:)([^}]+)(})/g
+
+/**
  * Takes a string and calls a provided handler function for each found instance
  * of `{ELEMENT:<elementName>}` in the string. Used to replace values in
  * OneBlink calculation and info (HTML) elements.
@@ -63,6 +77,8 @@ export function matchElementsTagRegex(
          * `{ELEMENT:Children|Name}`.
          */
         excludeNestedElements: boolean
+        /** Use the submission value instead of labels for elements with optionsets */
+        useSubmissionValue?: boolean
       },
   matchHandler: (options: {
     elementName: string
@@ -72,11 +88,18 @@ export function matchElementsTagRegex(
   const text = typeof options === 'string' ? options : options.text
   const excludeNestedElements =
     typeof options !== 'string' && !!options.excludeNestedElements
+  const useSubmissionValue =
+    typeof options !== 'string' && !!options.useSubmissionValue
   let matches
+  const rootRegex = useSubmissionValue
+    ? RootSubmissionValueElementRegex
+    : RootElementRegex
+  const nestedRegex = useSubmissionValue
+    ? NestedSubmissionValueElementRegex
+    : NestedElementRegex
   while (
-    (matches = (
-      excludeNestedElements ? RootElementRegex : NestedElementRegex
-    ).exec(text)) !== null
+    (matches = (excludeNestedElements ? rootRegex : nestedRegex).exec(text)) !==
+    null
   ) {
     if (matches?.length < 3) continue
 
