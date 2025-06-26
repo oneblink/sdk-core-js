@@ -76,7 +76,8 @@ const toLookupElement = (
     case 'abn':
     case 'apiNSWLiquorLicence':
     case 'googleAddress':
-    case 'arcGISWebMap': {
+    case 'arcGISWebMap':
+    case 'lookupButton': {
       return e
     }
     default: {
