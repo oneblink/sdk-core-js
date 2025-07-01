@@ -1,7 +1,7 @@
 {
   "name": "@oneblink/sdk-core",
   "description": "OneBlink SDK for JavaScript (works in Browsers and NodeJS)",
-  "version": "8.5.0",
+  "version": "8.5.1-beta.1",
   "author": "OneBlink <developers@oneblink.io> (https://oneblink.io)",
   "bugs": {
     "url": "https://github.com/oneblink/sdk-core-js/issues"
