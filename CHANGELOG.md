@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [8.5.0] - 2025-07-01
+
 ### Changed
 
 - `submissionService.processInjectablesInCustomResource()`, `submissionService.replaceInjectablesWithSubmissionValues()` and `submissionService.replaceInjectablesWithElementValues()` to support `ELEMENT_VALUE:` token
