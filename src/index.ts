@@ -120,3 +120,14 @@ export * as sharepointService from './sharepointService'
  * ```
  */
 export * as freshdeskService from './freshdeskService'
+
+/**
+ * ## GoodToGo Service
+ *
+ * Helper functions for handling GoodToGo
+ *
+ * ```js
+ * import { goodToGoService } from '@oneblink/sdk-core'
+ * ```
+ */
+export * as goodToGoService from './goodToGoService'
