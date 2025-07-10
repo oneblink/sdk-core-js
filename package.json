@@ -13,6 +13,7 @@
     "@microsoft/microsoft-graph-types": "^2.40.0",
     "@oneblink/release-cli": "^3.3.1-beta.4",
     "@oneblink/types": "github:oneblink/types",
+    "@spotto/contract": "^1.0.53",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.16",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
