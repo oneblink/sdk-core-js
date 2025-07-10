@@ -27,22 +27,6 @@ export function generateGoodToGoFieldResourceDefinitions(
             ...generateCommonConfig(fieldDefinition),
           })
           break
-        case 'MULTILINE':
-          memo.push({
-            type: 'TEXT_MULTI_LINE',
-            ...generateCommonConfig(fieldDefinition),
-          })
-          break
-        default:
-          // the below fields have a data type, but no input type
-          switch (fieldDefinition.dataType) {
-            case 'DATE':
-              memo.push({
-                type: 'DATE',
-                ...generateCommonConfig(fieldDefinition),
-              })
-              break
-          }
       }
 
       return memo
