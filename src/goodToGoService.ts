@@ -10,7 +10,7 @@ function generateCommonConfig(fieldDefinition: GetFieldResponse) {
   return {
     id: fieldDefinition.id,
     goodToGoCustomFieldName: fieldDefinition.name,
-    isRequired: !!fieldDefinition.required,
+    isRequired: true,
     displayName: fieldDefinition.label ?? fieldDefinition.name,
   }
 }
