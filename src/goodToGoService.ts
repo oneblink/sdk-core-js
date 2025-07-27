@@ -27,6 +27,29 @@ export function generateGoodToGoFieldResourceDefinitions(
             ...generateCommonConfig(fieldDefinition),
           })
           break
+        case 'DROPDOWN':
+          if (fieldDefinition.options) {
+            memo.push({
+              type: 'CHOICE_SINGLE',
+              ...generateCommonConfig(fieldDefinition),
+              choices: fieldDefinition.options.map((option) => ({
+                label: option,
+                value: option,
+              })),
+            })
+          }
+          break
+        case 'CHECKBOXES':
+          if (fieldDefinition.options) {
+            memo.push({
+              type: 'CHOICE_MULTIPLE',
+              ...generateCommonConfig(fieldDefinition),
+              choices: fieldDefinition.options.map((option) => ({
+                label: option,
+                value: option,
+              })),
+            })
+          }
       }
 
       return memo
