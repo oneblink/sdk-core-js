@@ -50,6 +50,14 @@ export function generateGoodToGoFieldResourceDefinitions(
               })),
             })
           }
+          break
+        case 'DATE':
+        case 'DATETIME':
+          memo.push({
+            type: fieldDefinition.inputType,
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
       }
 
       return memo
