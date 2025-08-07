@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- support for `CHECKBOXES` and `DROPDOWN` types to `goodToGoService`
+- support for `CHECKBOXES`,`DROPDOWN`,`DATE`,`DATETIME` types to `goodToGoService`
 
 ## [8.6.0] - 2025-07-25
 
