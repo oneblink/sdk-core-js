@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- support for `requiresAllConditionallyShowOptionsPredicates` in options elements
+
 ## [8.7.0] - 2025-08-11
 
 ### Added

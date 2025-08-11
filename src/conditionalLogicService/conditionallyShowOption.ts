@@ -181,7 +181,7 @@ export default function conditionallyShowOption(
   optionsEvaluated: string[],
 ): ShouldShowOption {
   // If the element does not have the `conditionallyShow` flag set,
-  // we can always show the element.
+  // we can always show the option.
 
   if (
     !elementToEvaluate.conditionallyShowOptions ||
@@ -194,7 +194,7 @@ export default function conditionallyShowOption(
   }
 
   // Check to see if this element has already been used to evaluate
-  // if the element should be shown based on parent element conditional logic
+  // if the option should be shown based on parent element conditional logic
   if (optionsEvaluated.some((optionId) => optionId === optionToEvaluate.id)) {
     throw new Error(
       'Your conditional logic has caused an infinite loop. Check the following Fields to ensure element A does not rely on element B if element B also relies on element A.',
@@ -215,7 +215,9 @@ export default function conditionallyShowOption(
 
   let isLoadingDynamicDEPENDENCY = false
   let isLoadingStaticDEPENDENCY = false
-  for (const predicate of validPredicates) {
+  const showResults = Array(validPredicates.length).fill(false)
+  for (let i = 0; i < validPredicates.length; i++) {
+    const predicate = validPredicates[i]
     const predicateResult = conditionallyShowOptionByPredicate(
       formElementsCtrl,
       predicate,
@@ -223,6 +225,11 @@ export default function conditionallyShowOption(
     )
     switch (predicateResult) {
       case 'SHOW': {
+        if (elementToEvaluate.requiresAllConditionallyShowOptionsPredicates) {
+          showResults[i] = true
+          break
+        }
+        // if match any return show
         return 'SHOW'
       }
       case 'LOADING_DYNAMIC_DEPENDENCY': {
@@ -234,6 +241,12 @@ export default function conditionallyShowOption(
         break
       }
     }
+  }
+  if (
+    elementToEvaluate.requiresAllConditionallyShowOptionsPredicates &&
+    showResults.every((result) => result)
+  ) {
+    return 'SHOW'
   }
   if (isLoadingDynamicDEPENDENCY) {
     return 'LOADING_DYNAMIC_DEPENDENCY'
