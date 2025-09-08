@@ -8,47 +8,47 @@ exports[`getDisplayDetailsFromFormSubmissionPayment Bpoint gets the correct deta
   },
   "paymentDisplayDetails": [
     {
-      "key": "receiptNumber",
+      "key": "BPOINT_RECEIPT_NUMBER",
       "label": "Receipt Number",
       "value": "receiptNumber",
     },
     {
-      "key": "crn1",
+      "key": "BPOINT_CRN1",
       "label": "CRN 1",
       "value": "crn1",
     },
     {
-      "key": "crn2",
+      "key": "BPOINT_CRN2",
       "label": "CRN 2",
       "value": "crn2",
     },
     {
-      "key": "crn3",
+      "key": "BPOINT_CRN3",
       "label": "CRN 3",
       "value": "crn3",
     },
     {
-      "key": "billerCode",
+      "key": "BPOINT_BILLER_CODE",
       "label": "Biller Code",
       "value": "billerCode",
     },
     {
-      "key": "creditCardMask",
+      "key": "BPOINT_CREDIT_CARD_MASK",
       "label": "Card Number",
       "value": "creditCardMask",
     },
     {
-      "key": "amount",
+      "key": "BPOINT_AMOUNT",
       "label": "Amount",
       "value": "$123.45",
     },
     {
-      "key": "surchargeAmount",
+      "key": "BPOINT_SURCHARGE_AMOUNT",
       "label": "Surcharge Amount",
       "value": "$12.34",
     },
     {
-      "key": "processedDateTime",
+      "key": "BPOINT_PROCESSED_DATE_TIME",
       "label": "Processed Date Time",
       "value": "11/09/2024 12:00:00 PM",
     },
@@ -64,32 +64,32 @@ exports[`getDisplayDetailsFromFormSubmissionPayment CP Pay gets the correct deta
   },
   "paymentDisplayDetails": [
     {
-      "key": "transactionId",
+      "key": "CP_PAY_TRANSACTION_ID",
       "label": "Transaction Id",
       "value": "123",
     },
     {
-      "key": "orderNumber",
+      "key": "CP_PAY_ORDER_NUMBER",
       "label": "Order Number",
       "value": "orderNumber",
     },
     {
-      "key": "paymentType",
+      "key": "CP_PAY_PAYMENT_TYPE",
       "label": "Payment Type",
       "value": "Credit/Debit Card",
     },
     {
-      "key": "creditCardMask",
+      "key": "CP_PAY_CREDIT_CARD_MASK",
       "label": "Card Number",
       "value": "xxxx xxxx xxxx 1234",
     },
     {
-      "key": "amount",
+      "key": "CP_PAY_AMOUNT",
       "label": "Amount",
       "value": "$123.45",
     },
     {
-      "key": "createdDateTime",
+      "key": "CP_PAY_CREATED_DATE_TIME",
       "label": "Created At",
       "value": "11/09/2024 12:00:00 PM",
     },
@@ -105,32 +105,32 @@ exports[`getDisplayDetailsFromFormSubmissionPayment CP Pay gets the correct deta
   },
   "paymentDisplayDetails": [
     {
-      "key": "transactionId",
+      "key": "CP_PAY_TRANSACTION_ID",
       "label": "Transaction Id",
       "value": "123",
     },
     {
-      "key": "orderNumber",
+      "key": "CP_PAY_ORDER_NUMBER",
       "label": "Order Number",
       "value": "externalReferenceId",
     },
     {
-      "key": "paymentType",
+      "key": "CP_PAY_PAYMENT_TYPE",
       "label": "Payment Type",
       "value": "CreditDebitCard",
     },
     {
-      "key": "creditCardMask",
+      "key": "CP_PAY_CREDIT_CARD_MASK",
       "label": "Card Number",
       "value": "xxxx xxxx xxxx 1234",
     },
     {
-      "key": "amount",
+      "key": "CP_PAY_AMOUNT",
       "label": "Amount",
       "value": "$123.45",
     },
     {
-      "key": "createdDateTime",
+      "key": "CP_PAY_CREATED_DATE_TIME",
       "label": "Created At",
       "value": "11/09/2024 12:00:00 PM",
     },
@@ -146,47 +146,47 @@ exports[`getDisplayDetailsFromFormSubmissionPayment NSW Gov Pay gets the correct
   },
   "paymentDisplayDetails": [
     {
-      "key": "completionReference",
+      "key": "NSW_GOV_PAY_COMPLETION_REFERENCE",
       "label": "Completion Reference",
       "value": "111111111111",
     },
     {
-      "key": "paymentReference",
+      "key": "NSW_GOV_PAY_PAYMENT_REFERENCE",
       "label": "Payment Reference",
       "value": "222222222222",
     },
     {
-      "key": "bankReference",
+      "key": "NSW_GOV_PAY_BANK_REFERENCE",
       "label": "Bank Reference",
       "value": "333333333333",
     },
     {
-      "key": "paymentMethod",
+      "key": "NSW_GOV_PAY_PAYMENT_METHOD",
       "label": "Payment Method",
       "value": "CARD",
     },
     {
-      "key": "creditCardMask",
+      "key": "NSW_GOV_PAY_CREDIT_CARD_NUMBER",
       "label": "Card Number",
       "value": "xxxx xxxx xxxx 4242",
     },
     {
-      "key": "amount",
+      "key": "NSW_GOV_PAY_AMOUNT",
       "label": "Amount",
       "value": "$123.45",
     },
     {
-      "key": "surchargeAmount",
+      "key": "NSW_GOV_PAY_SURCHARGE_AMOUNT",
       "label": "Surcharge Amount",
       "value": "$12.34",
     },
     {
-      "key": "surchargeGST",
+      "key": "NSW_GOV_PAY_SURCHARGE_GST",
       "label": "Surcharge GST",
       "value": "$2.34",
     },
     {
-      "key": "createdDateTime",
+      "key": "CP_PAY_CREATED_DATE_TIME",
       "label": "Created Date Time",
       "value": "11/09/2024 12:00:00 PM",
     },
@@ -202,32 +202,32 @@ exports[`getDisplayDetailsFromFormSubmissionPayment Westpac gets the correct det
   },
   "paymentDisplayDetails": [
     {
-      "key": "receiptNumber",
+      "key": "WESTPAC_QUICK_STREAM_RECEIPT_NUMBER",
       "label": "Receipt Number",
       "value": "receiptNumber",
     },
     {
-      "key": "paymentReferenceNumber",
+      "key": "WESTPAC_QUICK_STREAM_PAYMENT_REFERENCE_NUMBER",
       "label": "Payment Reference",
       "value": "paymentReferenceNumber",
     },
     {
-      "key": "customerReferenceNumber",
+      "key": "WESTPAC_QUICK_STREAM_CUSTOMER_REFERENCE_NUMBER",
       "label": "Customer Reference Number",
       "value": "customerReferenceNumber",
     },
     {
-      "key": "amount",
+      "key": "WESTPAC_QUICK_STREAM_AMOUNT",
       "label": "Amount",
       "value": "$123.45",
     },
     {
-      "key": "surchargeAmount",
+      "key": "WESTPAC_QUICK_STREAM_SURCHARGE_AMOUNT",
       "label": "Surcharge Amount",
       "value": "$12.34",
     },
     {
-      "key": "settlementDate",
+      "key": "WESTPAC_QUICK_STREAM_SETTLEMENT_DATE",
       "label": "Settlement Date",
       "value": "11/09/2024",
     },

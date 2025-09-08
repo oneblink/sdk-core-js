@@ -70,8 +70,9 @@ describe('getDisplayDetailsFromFormSubmissionPayment', () => {
       )
 
       expect(
-        details?.paymentDisplayDetails.find((d) => d.key === 'billerCode')
-          ?.value,
+        details?.paymentDisplayDetails.find(
+          (d) => d.key === 'NSW_GOV_PAY_BPAY_BILLER_CODE',
+        )?.value,
       ).toBe('billerCode')
     })
   })
