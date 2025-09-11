@@ -230,7 +230,7 @@ export const getDisplayDetailsFromFormSubmissionPayment = (
             ),
           },
           {
-            key: 'CP_PAY_CREATED_DATE_TIME',
+            key: 'NSW_GOV_PAY_CREATED_DATE_TIME',
             label: 'Created Date Time',
             value: formatDateTime(formSubmissionPayment.createdAt),
           },
