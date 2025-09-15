@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [8.8.1] - 2025-09-15
+
 ### Changed
 
 - payment display detail key values to be unique across payment providers
