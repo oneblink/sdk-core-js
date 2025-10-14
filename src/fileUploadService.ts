@@ -15,3 +15,26 @@
 export function getContentDisposition(filename: string): string {
   return `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
 }
+
+/**
+ * A default list of files types (extensions) that is allowed.
+ */
+export const restrictedFileTypes = [
+  'avif',
+  'apng',
+  'png',
+  'jpg',
+  'jpeg',
+  'jfif',
+  'pjpeg',
+  'pjp',
+  'gif',
+  'pdf',
+  'heic',
+  'heif',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'csv',
+]
