@@ -12,10 +12,10 @@ export type ShouldShowOption =
 
 const handleAttributePredicate = (
   predicate: FormTypes.ChoiceElementOptionAttribute,
-  model: SubmissionTypes.S3SubmissionData['submission'],
+  model: SubmissionTypes.S3SubmissionData['submission'] | undefined,
   predicateElement: FormTypes.FormElementWithOptions,
 ) => {
-  const values = model[predicateElement.name]
+  const values = model?.[predicateElement.name]
   if (!values) return true
 
   if (
@@ -160,7 +160,7 @@ const isAttributeFilterValid = (
   }
 
   // verify that at least one option is selected
-  const values = formElementsCtrl.model[predicateElement.name]
+  const values = formElementsCtrl.model?.[predicateElement.name]
   if (!values) return false
   // if the model value is an array, verify that it has a selection
   if (
