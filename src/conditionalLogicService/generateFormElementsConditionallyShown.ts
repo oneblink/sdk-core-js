@@ -154,7 +154,7 @@ const generateFormElementsConditionallyShownWithParent = ({
           if (formElementsConditionallyShown[element.name]) {
             break
           }
-          const entries = formElementsCtrl.model[element.name] as
+          const entries = formElementsCtrl.model?.[element.name] as
             | Array<SubmissionTypes.S3SubmissionData['submission']>
             | undefined
           formElementsConditionallyShown[element.name] = {

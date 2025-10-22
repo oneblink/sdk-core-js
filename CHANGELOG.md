@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `fileUploadService.restrictedFileTypes`
 
+### Fixed
+
+- nested forms with no value breaking conditional logic
+
 ## [8.8.1] - 2025-09-15
 
 ### Changed

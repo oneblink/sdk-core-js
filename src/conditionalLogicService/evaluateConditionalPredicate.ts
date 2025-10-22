@@ -1,4 +1,4 @@
-import { FormTypes, ConditionTypes } from '@oneblink/types'
+import { FormTypes, ConditionTypes, SubmissionTypes } from '@oneblink/types'
 import { FormElementsCtrl } from './types'
 import { typeCastService, formElementsService } from '..'
 import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate'
@@ -27,7 +27,7 @@ function getElementAndValue(
     if (formElementWithName) {
       return {
         formElementWithName,
-        value: formElementsCtrl.model[formElementWithName.name],
+        value: formElementsCtrl.model?.[formElementWithName.name],
       }
     }
   } else if (formElementsCtrl.parentFormElementsCtrl) {
@@ -154,9 +154,10 @@ export default function evaluateConditionalPredicate({
         ) {
           return
         }
-        const formModel = formElementsCtrl.model[predicateElement.name] as {
-          [name: string]: unknown
-        }
+        const formModel = formElementsCtrl.model?.[predicateElement.name] as
+          | SubmissionTypes.S3SubmissionData['submission']
+          | undefined
+
         const result = conditionallyShowByPredicate(
           {
             model: formModel,
