@@ -484,6 +484,15 @@ function formatValue({
         value: value?.addressDetails?.formattedAddress || value?.addressId,
       }
     }
+    case 'pointAddressV3': {
+      const value =
+        unknownValue as PointTypes.PointAddressV3GetAddressDetailsResponse
+      return {
+        element: element,
+        value:
+          value.properties?.formattedAddress || value.properties?.addressId,
+      }
+    }
     case 'googleAddress': {
       const value = unknownValue as GoogleTypes.GoogleMapsAddress
       return {

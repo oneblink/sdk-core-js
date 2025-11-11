@@ -69,6 +69,7 @@ const toLookupElement = (
     case 'telephone':
     case 'pointCadastralParcel':
     case 'pointAddress':
+    case 'pointAddressV3':
     case 'geoscapeAddress':
     case 'civicaStreetName':
     case 'bsb':
@@ -198,6 +199,7 @@ const toAutoLookupElement = (e: FormTypes.FormElement) => {
     case 'pointCadastralParcel':
     case 'geoscapeAddress':
     case 'pointAddress':
+    case 'pointAddressV3':
     case 'compliance':
     case 'civicaStreetName':
     case 'autocomplete':
