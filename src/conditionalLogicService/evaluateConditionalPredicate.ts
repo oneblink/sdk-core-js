@@ -174,53 +174,99 @@ export default function evaluateConditionalPredicate({
       }
       return
     case 'ADDRESS_PROPERTY': {
-      // Only element that should work as predicate element should be Point or Geoscape.
+      // Only element types that should work as predicate element should be Point, Point V3 or Geoscape.
       if (
-        !(
-          predicateElement.type === 'pointAddress' ||
-          predicateElement.type === 'geoscapeAddress'
-        )
+        predicateElement.type === 'pointAddress' ||
+        predicateElement.type === 'geoscapeAddress' ||
+        predicateElement.type === 'pointAddressV3'
       ) {
-        return
-      }
-      if (predicateValue && typeof predicateValue === 'object') {
-        if (predicate.definition.property === 'STATE_EQUALITY') {
-          // Validate that it has the properties we want, in case submission data
-          // is incorrect but has the right element reference.
-          if (
-            'addressDetails' in predicateValue &&
-            predicateValue.addressDetails &&
-            typeof predicateValue.addressDetails === 'object' &&
-            'stateTerritory' in predicateValue.addressDetails &&
-            typeof predicateValue.addressDetails.stateTerritory === 'string'
-          ) {
-            const result =
-              predicateValue.addressDetails.stateTerritory ===
-              predicate.definition.value
-            if (result) {
-              return predicateElement
+        if (predicateValue && typeof predicateValue === 'object') {
+          if (predicate.definition.property === 'STATE_EQUALITY') {
+            switch (predicateElement.type) {
+              case 'pointAddressV3': {
+                if (
+                  'properties' in predicateValue &&
+                  predicateValue.properties &&
+                  typeof predicateValue.properties === 'object' &&
+                  'stateTerritory' in predicateValue.properties &&
+                  typeof predicateValue.properties.stateTerritory === 'string'
+                ) {
+                  // Validate that it has the properties we want, in case submission data
+                  // is incorrect but has the right element reference.
+                  const result =
+                    predicateValue.properties.stateTerritory ===
+                    predicate.definition.value
+                  if (result) {
+                    return predicateElement
+                  }
+                  return
+                }
+                break
+              }
+              case 'geoscapeAddress':
+              case 'pointAddress': {
+                // Validate that it has the properties we want, in case submission data
+                // is incorrect but has the right element reference.
+                if (
+                  'addressDetails' in predicateValue &&
+                  predicateValue.addressDetails &&
+                  typeof predicateValue.addressDetails === 'object' &&
+                  'stateTerritory' in predicateValue.addressDetails &&
+                  typeof predicateValue.addressDetails.stateTerritory ===
+                    'string'
+                ) {
+                  const result =
+                    predicateValue.addressDetails.stateTerritory ===
+                    predicate.definition.value
+                  if (result) {
+                    return predicateElement
+                  }
+                  return
+                }
+              }
             }
           }
-          return
-        }
-        // If the property isn't State Equality, we are checking Physical addresses. This only exists for Point.
-        if (predicateElement.type === 'pointAddress') {
-          // If the value is true, we only want to return the element for PO Boxes. If it's false, then we only want
-          // to return element for non mail address addresses.
-          if (
-            'dataset' in predicateValue &&
-            typeof predicateValue.dataset === 'string'
-          ) {
-            const result = predicate.definition.value
-              ? predicateValue.dataset === 'mailAddress'
-              : predicateValue.dataset === 'GNAF'
-            if (result) {
-              return predicateElement
+          // If the property isn't State Equality, we are checking Physical addresses. This only exists for Point and Point V3.
+          switch (predicateElement.type) {
+            case 'pointAddressV3': {
+              // If the value is true, we only want to return the element for PO Boxes. If it's false, then we only want
+              // to return element for non mail address addresses.
+              if (
+                'properties' in predicateValue &&
+                predicateValue.properties &&
+                typeof predicateValue.properties === 'object' &&
+                'dataset' in predicateValue.properties &&
+                typeof predicateValue.properties.dataset === 'string'
+              ) {
+                const result = predicate.definition.value
+                  ? predicateValue.properties.dataset.startsWith('mailAddress')
+                  : predicateValue.properties.dataset.startsWith('gnaf')
+                if (result) {
+                  return predicateElement
+                }
+              }
+              break
+            }
+            case 'pointAddress': {
+              // If the value is true, we only want to return the element for PO Boxes. If it's false, then we only want
+              // to return element for non mail address addresses.
+              if (
+                'dataset' in predicateValue &&
+                typeof predicateValue.dataset === 'string'
+              ) {
+                const result = predicate.definition.value
+                  ? predicateValue.dataset === 'mailAddress'
+                  : predicateValue.dataset === 'GNAF'
+                if (result) {
+                  return predicateElement
+                }
+              }
+              break
             }
           }
         }
       }
-      return
+      break
     }
     case 'OPTIONS':
     default: {
