@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [8.10.0] - 2025-11-19
+
 ###
 
 - Support for Point Address V3 element type
