@@ -529,6 +529,17 @@ function formatValue({
           `${value?.licenceDetail?.licenceNumber} | ${value?.licenceDetail?.licenceName}`.trim(),
       }
     }
+    case 'freshdeskDependentField': {
+      const value =
+        unknownValue as FormTypes.FreshdeskDependentFieldElementValue
+      return {
+        element,
+        value:
+          [value.category, value.subCategory, value.item]
+            .filter((text) => !!text)
+            .join(' / ') || undefined,
+      }
+    }
     default: {
       return { element: element, value: unknownValue }
     }

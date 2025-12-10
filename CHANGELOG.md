@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `URL` and `INTEGER` type resource definitions
 - `RICHTEXT`, `MULTILINE`, `TEXT_MULTI_LINE`, `RADIO`, `DECIMAL`, `INTEGER`, `LINK`, and `SWITCH` GoodToGo input types
+- formatting to `freshdeskDependentField` form element type submission value in result from `submissionService.getElementSubmissionValue()`
 
 ## [8.10.0] - 2025-11-19
 
