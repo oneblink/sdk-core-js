@@ -27,6 +27,7 @@ export type ResourceDefinition<T> = T &
           | 'NUMBER'
           | 'BOOLEAN'
           | 'IMAGE'
+          | 'URL'
       }
     | ResourceDefinitionWithChoices
   )

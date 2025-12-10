@@ -27,6 +27,14 @@ export function generateGoodToGoFieldResourceDefinitions(
             ...generateCommonConfig(fieldDefinition),
           })
           break
+        case 'RICHTEXT':
+        case 'MULTILINE':
+          memo.push({
+            type: 'TEXT_MULTI_LINE',
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
+        case 'RADIO':
         case 'DROPDOWN':
           if (fieldDefinition.options) {
             memo.push({
@@ -58,6 +66,31 @@ export function generateGoodToGoFieldResourceDefinitions(
             ...generateCommonConfig(fieldDefinition),
           })
           break
+        case 'DECIMAL':
+        case 'INTEGER':
+          memo.push({
+            type: 'NUMBER',
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
+        case 'SWITCH':
+          memo.push({
+            type: 'BOOLEAN',
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
+        case 'LINK':
+          memo.push({
+            type: 'URL',
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
+        case undefined:
+          break
+        default: {
+          const n: never = fieldDefinition.inputType
+          return n
+        }
       }
 
       return memo
