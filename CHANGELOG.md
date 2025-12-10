@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- `URL` type resource definitions
+- `URL` and `INTEGER` type resource definitions
 - `RICHTEXT`, `MULTILINE`, `TEXT_MULTI_LINE`, `RADIO`, `DECIMAL`, `INTEGER`, `LINK`, and `SWITCH` GoodToGo input types
 
 ## [8.10.0] - 2025-11-19
