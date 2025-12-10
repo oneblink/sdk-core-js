@@ -25,6 +25,7 @@ export type ResourceDefinition<T> = T &
           | 'DATE'
           | 'DATETIME'
           | 'NUMBER'
+          | 'INTEGER'
           | 'BOOLEAN'
           | 'IMAGE'
           | 'URL'

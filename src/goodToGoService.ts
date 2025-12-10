@@ -67,9 +67,14 @@ export function generateGoodToGoFieldResourceDefinitions(
           })
           break
         case 'DECIMAL':
-        case 'INTEGER':
           memo.push({
             type: 'NUMBER',
+            ...generateCommonConfig(fieldDefinition),
+          })
+          break
+        case 'INTEGER':
+          memo.push({
+            type: 'INTEGER',
             ...generateCommonConfig(fieldDefinition),
           })
           break
