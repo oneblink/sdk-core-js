@@ -12,7 +12,8 @@ function convertToFormWorkflowEvent(
   const url = new URL(webhookSubscription.callbackUrl)
   if (
     url.hostname.endsWith('logic.azure.com') ||
-    url.hostname.endsWith('logic.azure.us')
+    url.hostname.endsWith('logic.azure.us') ||
+    url.hostname.endsWith('api.powerplatform.com')
   ) {
     return {
       type: 'POWER_AUTOMATE_FLOW',
