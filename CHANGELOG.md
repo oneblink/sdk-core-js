@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [8.11.1] - 2025-12-17
+
 ### Added
 
 - `URL` and `INTEGER` type resource definitions
