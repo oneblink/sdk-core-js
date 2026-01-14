@@ -1,11 +1,6 @@
 import { FormTypes } from '@oneblink/types'
-import { typeCastService } from '.'
-import {
-  Form,
-  FormElement,
-  HtmlElement,
-} from '@oneblink/types/typescript/forms'
-export { matchElementsTagRegex } from './form-elements-regex'
+import { typeCastService } from './index.js'
+export { matchElementsTagRegex } from './form-elements-regex.js'
 
 /**
  * Iterate over all form elements, also iterating over nested form element (e.g.
@@ -294,10 +289,10 @@ const fixElementName = (elementName: string) => {
  * @returns
  */
 function injectFormElementsIntoForm(
-  form: Form,
-  forms: Form[],
+  form: FormTypes.Form,
+  forms: FormTypes.Form[],
   injectAuthenticatedForms = true,
-): FormElement[] {
+): FormTypes.FormElement[] {
   const elementsWithInjectedForms = injectFormElements(
     form.elements,
     forms,
@@ -309,12 +304,12 @@ function injectFormElementsIntoForm(
 }
 
 function injectFormElements(
-  elements: FormElement[],
-  forms: Form[],
+  elements: FormTypes.FormElement[],
+  forms: FormTypes.Form[],
   parentIds: number[],
   injectAuthenticatedForms: boolean,
-): FormElement[] {
-  return elements.reduce<FormElement[]>((newElements, element) => {
+): FormTypes.FormElement[] {
+  return elements.reduce<FormTypes.FormElement[]>((newElements, element) => {
     if (
       (element.type === 'page' ||
         element.type === 'repeatableSet' ||
@@ -334,7 +329,7 @@ function injectFormElements(
       const formToInject = forms.find((form) => element.formId === form.id)
 
       if (!formToInject) {
-        const newElement: HtmlElement = {
+        const newElement: FormTypes.HtmlElement = {
           ...element,
           type: 'html',
           name: 'Form_not_found',
@@ -351,7 +346,7 @@ function injectFormElements(
           `No form elements injected for element id: ${element.id}, as request was unauthenticated and target form (form id: ${formToInject.id}) requires authentication.`,
         )
 
-        const newElement: HtmlElement = {
+        const newElement: FormTypes.HtmlElement = {
           ...element,
           type: 'html',
           name: 'Form_requires_authenticated',

@@ -1,8 +1,8 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
-import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate'
-import { FormElementsCtrl } from './types'
-import { typeCastService } from '..'
-import conditionallyShowElement from './conditionallyShowElement'
+import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate.js'
+import { FormElementsCtrl } from './types.js'
+import { typeCastService } from '../index.js'
+import conditionallyShowElement from './conditionallyShowElement.js'
 
 export type ShouldShowOption =
   | 'SHOW'

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { MiscTypes } from '@oneblink/types'
 import { parseUserProfile, getUserFriendlyName } from '../src/userService'
 

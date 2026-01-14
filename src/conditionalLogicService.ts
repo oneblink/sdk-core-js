@@ -1,8 +1,8 @@
-import evaluateConditionalPredicate from './conditionalLogicService/evaluateConditionalPredicate'
-import { flattenFormElements } from './formElementsService'
+import evaluateConditionalPredicate from './conditionalLogicService/evaluateConditionalPredicate.js'
+import { flattenFormElements } from './formElementsService.js'
 import { ConditionTypes, FormTypes, SubmissionTypes } from '@oneblink/types'
 
-export * from './conditionalLogicService/generateFormElementsConditionallyShown'
+export * from './conditionalLogicService/generateFormElementsConditionallyShown.js'
 
 /**
  * Given a set of form elements and submission data, evaluate if predicates are

@@ -1,6 +1,6 @@
 import { FormTypes, ConditionTypes } from '@oneblink/types'
-import { FormElementsCtrl } from './types'
-import evaluateConditionalPredicate from './evaluateConditionalPredicate'
+import { FormElementsCtrl } from './types.js'
+import evaluateConditionalPredicate from './evaluateConditionalPredicate.js'
 
 const getParentFormElements = (
   formElementsCtrl: FormElementsCtrl,

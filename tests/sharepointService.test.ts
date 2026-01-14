@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { generateSharepointColumnResourceDefinitions } from '../src/sharepointService'
 import { ColumnDefinition } from '@microsoft/microsoft-graph-types'
 

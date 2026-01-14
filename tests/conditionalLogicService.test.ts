@@ -1,3 +1,4 @@
+import { describe, expect, test, vi } from 'vitest'
 import { FormTypes } from '@oneblink/types'
 import {
   evaluateConditionalPredicates,
@@ -664,7 +665,7 @@ describe('generateFormElementsConditionallyShown', () => {
   })
 
   test('should pass error to error callback', () => {
-    const errorCallback = jest.fn()
+    const errorCallback = vi.fn()
     const result = generateFormElementsConditionallyShown({
       submission: {
         first_option: 'one_a',

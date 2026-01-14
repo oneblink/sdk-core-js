@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
-    "module": "commonjs",
-    "moduleResolution": "Node",
-    "lib": ["ES2021"],
+    "target": "es2024",
+    "module": "nodenext",
+    "moduleResolution": "node16",
+    "lib": ["es2024", "DOM"],
     "allowJs": true,
     "declaration": true,
     "outDir": "./dist",

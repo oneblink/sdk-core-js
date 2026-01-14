@@ -1,6 +1,6 @@
 import { ColumnDefinition } from '@microsoft/microsoft-graph-types'
 import { SubmissionEventTypes } from '@oneblink/types'
-import { ResourceDefinition } from './types/resource-definitions'
+import { ResourceDefinition } from './types/resource-definitions.js'
 
 export type SharepointColumnResourceDefinition =
   ResourceDefinition<SubmissionEventTypes.SharepointColumnResourceDefinitionBase>

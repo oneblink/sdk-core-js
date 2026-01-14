@@ -1,9 +1,9 @@
 import { FormTypes, ConditionTypes, SubmissionTypes } from '@oneblink/types'
-import { FormElementsCtrl } from './types'
-import { typeCastService, formElementsService } from '..'
-import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate'
-import { conditionallyShowByPredicate } from './conditionallyShowElement'
-import { flattenFormElements } from '../formElementsService'
+import { FormElementsCtrl } from './types.js'
+import { typeCastService, formElementsService } from '../index.js'
+import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate.js'
+import { conditionallyShowByPredicate } from './conditionallyShowElement.js'
+import { flattenFormElements } from '../formElementsService.js'
 
 const fnMap = {
   '>': (lhs: number, rhs: number) => lhs > rhs,

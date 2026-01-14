@@ -1,10 +1,10 @@
-import { ABNRecord } from '@oneblink/types/typescript/misc'
+import { MiscTypes } from '@oneblink/types'
 
 const createLegalName = ({
   familyName,
   givenName,
   otherGivenName,
-}: NonNullable<ABNRecord['legalName']>) => {
+}: NonNullable<MiscTypes.ABNRecord['legalName']>) => {
   let legalName = ''
   // Concat last name
   if (familyName) legalName += `${familyName}, `
@@ -30,7 +30,7 @@ const createLegalName = ({
  * @returns
  */
 export const getBusinessNameFromABNRecord = (
-  abnRecord: ABNRecord,
+  abnRecord: MiscTypes.ABNRecord,
 ): string | undefined => {
   if (abnRecord.entityType.entityTypeCode === 'IND' && abnRecord.legalName) {
     const legalName = createLegalName(abnRecord.legalName)
@@ -64,7 +64,7 @@ export const getBusinessNameFromABNRecord = (
  * @returns
  */
 export const displayBusinessNameFromABNRecord = (
-  abnRecord: ABNRecord,
+  abnRecord: MiscTypes.ABNRecord,
 ): string => {
   const businessName = getBusinessNameFromABNRecord(abnRecord)
   return businessName || 'ABN Details Suppressed'
@@ -84,7 +84,7 @@ export const displayBusinessNameFromABNRecord = (
  * @returns
  */
 export const getABNNumberFromABNRecord = (
-  abnRecord: ABNRecord,
+  abnRecord: MiscTypes.ABNRecord,
 ): string | undefined => {
   if (!abnRecord.ABN) return
   if (Array.isArray(abnRecord.ABN)) {
@@ -109,7 +109,9 @@ export const getABNNumberFromABNRecord = (
  * @param abnRecord
  * @returns
  */
-export const displayABNNumberFromABNRecord = (abnRecord: ABNRecord): string => {
+export const displayABNNumberFromABNRecord = (
+  abnRecord: MiscTypes.ABNRecord,
+): string => {
   const abnNumber = getABNNumberFromABNRecord(abnRecord)
   return abnNumber || 'Unknown ABN Number'
 }

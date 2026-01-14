@@ -3,7 +3,7 @@ import {
   SubmissionEventTypes,
   SubmissionTypes,
 } from '@oneblink/types'
-import { conditionalLogicService } from '.'
+import { conditionalLogicService } from './index.js'
 
 /**
  * Examine a submission and its form definition to validate whether a scheduling

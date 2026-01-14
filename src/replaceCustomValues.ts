@@ -9,15 +9,15 @@ import {
   ScheduledTasksTypes,
   SubmissionTypes,
 } from '@oneblink/types'
-import { getABNNumberFromABNRecord } from './abnService'
+import { getABNNumberFromABNRecord } from './abnService.js'
 import {
   RootElementRegex,
   NestedElementRegex,
   matchElementsTagRegex,
   RootSubmissionValueElementRegex,
   NestedSubmissionValueElementRegex,
-} from './form-elements-regex'
-import { findFormElement, flattenFormElements } from './formElementsService'
+} from './form-elements-regex.js'
+import { findFormElement, flattenFormElements } from './formElementsService.js'
 
 export type ReplaceInjectablesFormatters = {
   /** A function to format any date/times. */

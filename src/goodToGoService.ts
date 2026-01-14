@@ -1,7 +1,7 @@
 import { GetFieldResponse } from '@spotto/contract'
 import { SubmissionEventTypes } from '@oneblink/types'
 
-import { ResourceDefinition } from './types/resource-definitions'
+import { ResourceDefinition } from './types/resource-definitions.js'
 
 export type GoodToGoFieldResourceDefinition =
   ResourceDefinition<SubmissionEventTypes.GoodToGoUpdateAssetResourceDefinition>

@@ -3,11 +3,11 @@ import {
   SubmissionEventTypes,
   SubmissionTypes,
 } from '@oneblink/types'
-import { conditionalLogicService, formElementsService } from '.'
+import { conditionalLogicService, formElementsService } from './index.js'
 import {
   getRootElementValueById,
   ReplaceInjectablesFormatters,
-} from './submissionService'
+} from './submissionService.js'
 
 /**
  * Examine a submission and its form definition to validate whether a payment

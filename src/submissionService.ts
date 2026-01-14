@@ -1,6 +1,6 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 
-export * from './replaceCustomValues'
+export * from './replaceCustomValues.js'
 
 /**
  * Takes a form element's id, the form elements and the submission data to

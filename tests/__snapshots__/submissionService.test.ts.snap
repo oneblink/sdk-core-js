@@ -1,34 +1,40 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`processInjectablesInCustomResource should correctly replace nested injectables 1`] = `
+exports[`processInjectablesInCustomResource > should correctly replace nested injectables 1`] = `
 Map {
   "John is part of the Smith family" => "John is part of the Smith family",
   "Jane is part of the Smith family" => "Jane is part of the Smith family",
 }
 `;
 
-exports[`processInjectablesInCustomResource should handle missing element values gracefully 1`] = `Map {}`;
+exports[`processInjectablesInCustomResource > should handle missing element values gracefully 1`] = `Map {}`;
 
-exports[`processInjectablesInCustomResource should handle multiple replacements correctly 1`] = `
+exports[`processInjectablesInCustomResource > should handle multiple replacements correctly 1`] = `
 Map {
   "Smith Smith" => "Smith Smith",
 }
 `;
 
-exports[`processInjectablesInCustomResource should handle single element without iteration 1`] = `
+exports[`processInjectablesInCustomResource > should handle single element without iteration 1`] = `
 Map {
   "Smith" => "Smith",
 }
 `;
 
-exports[`processInjectablesInCustomResource should replace injectable values correctly 1`] = `
+exports[`processInjectablesInCustomResource > should replace ELEMENT_VALUE tokens correctly 1`] = `
+Map {
+  "1" => "1",
+}
+`;
+
+exports[`processInjectablesInCustomResource > should replace injectable values correctly 1`] = `
 Map {
   "John Smith" => "John Smith",
   "Jane Smith" => "Jane Smith",
 }
 `;
 
-exports[`processInjectablesInCustomResource should replace injectable values correctly when resource is not a string 1`] = `
+exports[`processInjectablesInCustomResource > should replace injectable values correctly when resource is not a string 1`] = `
 [
   {
     "book_title": "The Adventures of Superman",
@@ -73,28 +79,22 @@ exports[`processInjectablesInCustomResource should replace injectable values cor
 ]
 `;
 
-exports[`processInjectablesInCustomResource should return an empty array if no injectables are present 1`] = `
-Map {
-  "No injectables here" => "No injectables here",
-}
-`;
-
-exports[`processInjectablesInCustomResource should replace ELEMENT_VALUE tokens correctly 1`] = `
-Map {
-  "1" => "1",
-}
-`;
-
-exports[`processInjectablesInCustomResource should replace nested ELEMENT_VALUE tokens correctly 1`] = `
+exports[`processInjectablesInCustomResource > should replace nested ELEMENT_VALUE tokens correctly 1`] = `
 Map {
   "Nested: 2" => "Nested: 2",
   "Nested: 1" => "Nested: 1",
 }
 `;
 
-exports[`processInjectablesInCustomResource should replace nested and root ELEMENT_VALUE tokens correctly 1`] = `
+exports[`processInjectablesInCustomResource > should replace nested and root ELEMENT_VALUE tokens correctly 1`] = `
 Map {
   "Nested: 2 Root: 1" => "Nested: 2 Root: 1",
   "Nested: 1 Root: 1" => "Nested: 1 Root: 1",
+}
+`;
+
+exports[`processInjectablesInCustomResource > should return an empty array if no injectables are present 1`] = `
+Map {
+  "No injectables here" => "No injectables here",
 }
 `;

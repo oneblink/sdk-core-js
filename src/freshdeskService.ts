@@ -2,7 +2,7 @@ import { FreshdeskTypes, SubmissionEventTypes } from '@oneblink/types'
 import {
   ResourceDefinition,
   ResourceDefinitionChoice,
-} from './types/resource-definitions'
+} from './types/resource-definitions.js'
 
 export const multilineFieldType = 'custom_paragraph'
 export const emailFieldType = 'default_requester'
