@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { GetFieldResponse } from '@spotto/contract'
 import { generateGoodToGoFieldResourceDefinitions } from '../src/goodToGoService'
 

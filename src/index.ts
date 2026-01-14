@@ -1,4 +1,4 @@
-export * as resourceDefinitionTypes from './types/resource-definitions'
+export * as resourceDefinitionTypes from './types/resource-definitions.js'
 /**
  * ## Form Elements Service
  *
@@ -8,7 +8,7 @@ export * as resourceDefinitionTypes from './types/resource-definitions'
  * import { formElementsService } from '@oneblink/sdk-core'
  * ```
  */
-export * as formElementsService from './formElementsService'
+export * as formElementsService from './formElementsService.js'
 /**
  * ## Conditional Logic Service
  *
@@ -18,7 +18,7 @@ export * as formElementsService from './formElementsService'
  * import { conditionalLogicService } from '@oneblink/sdk-core'
  * ```
  */
-export * as conditionalLogicService from './conditionalLogicService'
+export * as conditionalLogicService from './conditionalLogicService.js'
 /**
  * ## Submission Service
  *
@@ -28,7 +28,7 @@ export * as conditionalLogicService from './conditionalLogicService'
  * import { submissionService } from '@oneblink/sdk-core'
  * ```
  */
-export * as submissionService from './submissionService'
+export * as submissionService from './submissionService.js'
 /**
  * ## Submission Service
  *
@@ -38,7 +38,7 @@ export * as submissionService from './submissionService'
  * import { typeCastService } from '@oneblink/sdk-core'
  * ```
  */
-export * as typeCastService from './typeCastService'
+export * as typeCastService from './typeCastService.js'
 /**
  * ## User Service
  *
@@ -48,7 +48,7 @@ export * as typeCastService from './typeCastService'
  * import { userService } from '@oneblink/sdk-core'
  * ```
  */
-export * as userService from './userService'
+export * as userService from './userService.js'
 /**
  * ## ABN Service
  *
@@ -58,7 +58,7 @@ export * as userService from './userService'
  * import { abnService } from '@oneblink/sdk-core'
  * ```
  */
-export * as abnService from './abnService'
+export * as abnService from './abnService.js'
 /**
  * ## Payment Service
  *
@@ -68,7 +68,7 @@ export * as abnService from './abnService'
  * import { paymentService } from '@oneblink/sdk-core'
  * ```
  */
-export * as paymentService from './paymentService'
+export * as paymentService from './paymentService.js'
 /**
  * ## Scheduling Service
  *
@@ -78,7 +78,7 @@ export * as paymentService from './paymentService'
  * import { schedulingService } from '@oneblink/sdk-core'
  * ```
  */
-export * as schedulingService from './schedulingService'
+export * as schedulingService from './schedulingService.js'
 /**
  * ## File Upload Service
  *
@@ -88,7 +88,7 @@ export * as schedulingService from './schedulingService'
  * import { fileUploadService } from '@oneblink/sdk-core'
  * ```
  */
-export * as fileUploadService from './fileUploadService'
+export * as fileUploadService from './fileUploadService.js'
 /**
  * ## Webhook Subscription Service
  *
@@ -98,7 +98,7 @@ export * as fileUploadService from './fileUploadService'
  * import { webhookSubscriptionService } from '@oneblink/sdk-core'
  * ```
  */
-export * as webhookSubscriptionService from './webhookSubscriptionService'
+export * as webhookSubscriptionService from './webhookSubscriptionService.js'
 /**
  * ## SharePoint Service
  *
@@ -108,7 +108,7 @@ export * as webhookSubscriptionService from './webhookSubscriptionService'
  * import { sharepointService } from '@oneblink/sdk-core'
  * ```
  */
-export * as sharepointService from './sharepointService'
+export * as sharepointService from './sharepointService.js'
 
 /**
  * ## Freshdesk Service
@@ -119,7 +119,7 @@ export * as sharepointService from './sharepointService'
  * import { freshdeskService } from '@oneblink/sdk-core'
  * ```
  */
-export * as freshdeskService from './freshdeskService'
+export * as freshdeskService from './freshdeskService.js'
 
 /**
  * ## GoodToGo Service
@@ -130,4 +130,4 @@ export * as freshdeskService from './freshdeskService'
  * import { goodToGoService } from '@oneblink/sdk-core'
  * ```
  */
-export * as goodToGoService from './goodToGoService'
+export * as goodToGoService from './goodToGoService.js'

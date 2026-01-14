@@ -1,11 +1,11 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
-import { FormElementsCtrl } from './types'
-import { flattenFormElements } from '../formElementsService'
-import conditionallyShowElement from './conditionallyShowElement'
+import { FormElementsCtrl } from './types.js'
+import { flattenFormElements } from '../formElementsService.js'
+import conditionallyShowElement from './conditionallyShowElement.js'
 import conditionallyShowOption, {
   ShouldShowOption,
-} from './conditionallyShowOption'
-import { typeCastService } from '..'
+} from './conditionallyShowOption.js'
+import { typeCastService } from '../index.js'
 
 export type FormElementsConditionallyShown = Record<
   string,

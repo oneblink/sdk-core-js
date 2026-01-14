@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 import { FormElement } from '@oneblink/types/typescript/forms'
 import { generateFormElementsConditionallyShown } from '../../src/conditionalLogicService'
 
