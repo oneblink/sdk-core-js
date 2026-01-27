@@ -1,7 +1,7 @@
 {
   "name": "@oneblink/sdk-core",
   "description": "OneBlink SDK for JavaScript (works in Browsers and NodeJS)",
-  "version": "9.0.0-beta.1",
+  "version": "9.0.0-beta.2",
   "author": "OneBlink <developers@oneblink.io> (https://oneblink.io)",
   "bugs": {
     "url": "https://github.com/oneblink/sdk-core-js/issues"
@@ -11,7 +11,7 @@
     "@eslint/js": "^9.39.2",
     "@microsoft/eslint-plugin-sdl": "^1.1.0",
     "@microsoft/microsoft-graph-types": "^2.43.1",
-    "@oneblink/release-cli": "^3.4.0",
+    "@oneblink/release-cli": "^4.0.0-beta.2",
     "@oneblink/types": "github:oneblink/types",
     "@spotto/contract": "^1.0.69-alpha.13",
     "@types/lodash": "^4.17.23",
@@ -22,7 +22,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "fixpack": "^4.0.0",
     "globals": "^17.0.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "prettier": "^3.7.4",
     "prettier-plugin-jsdoc": "^1.8.0",
     "tsc-watch": "^7.2.0",
