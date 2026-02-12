@@ -131,3 +131,14 @@ export * as freshdeskService from './freshdeskService.js'
  * ```
  */
 export * as goodToGoService from './goodToGoService.js'
+
+/**
+ * ## Salesforce Service
+ *
+ * Helper functions for handling Salesforce
+ *
+ * ```js
+ * import { salesForceService } from '@oneblink/sdk-core'
+ * ```
+ */
+export * as salesForceService from './salesForceService.js'
