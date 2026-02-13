@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `salesforceService`
+
 ### Fixed
 
 - github action permissions to allow docs and github release jobs
