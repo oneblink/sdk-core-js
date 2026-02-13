@@ -139,11 +139,7 @@ export const generateSalesforceFieldDefinitions = (
         break
       }
       case 'floatarray':
-      case 'textarray': {
-        // TODO: Maybe support these two. Investigation required.
-        break
-      }
-
+      case 'textarray':
       case 'json':
       case 'reference':
       case 'id':
