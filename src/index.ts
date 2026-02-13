@@ -141,4 +141,4 @@ export * as goodToGoService from './goodToGoService.js'
  * import { salesForceService } from '@oneblink/sdk-core'
  * ```
  */
-export * as salesForceService from './salesForceService.js'
+export * as salesforceService from './salesforceService.js'

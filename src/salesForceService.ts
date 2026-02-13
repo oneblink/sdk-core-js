@@ -2,7 +2,7 @@ import type { Field } from '@salesforce/types/partner'
 import { ResourceDefinition } from './types/resource-definitions.js'
 import { SubmissionEventTypes } from '@oneblink/types'
 
-export type SalesForceFieldDefinition =
+export type SalesforceFieldDefinition =
   ResourceDefinition<SubmissionEventTypes.SalesforceObjectRecordFieldResourceDefinition>
 
 const generateCommonConfig = (fieldDefinition: Field) => {
@@ -17,10 +17,10 @@ const generateCommonConfig = (fieldDefinition: Field) => {
   }
 }
 
-export const generateSalesForceFieldDefinitions = (
+export const generateSalesforceFieldDefinitions = (
   fieldDefinitions: Field[],
 ) => {
-  return fieldDefinitions.reduce<SalesForceFieldDefinition[]>((memo, field) => {
+  return fieldDefinitions.reduce<SalesforceFieldDefinition[]>((memo, field) => {
     switch (field.type) {
       case 'string':
       case 'encryptedstring': {
@@ -30,13 +30,9 @@ export const generateSalesForceFieldDefinitions = (
         })
         break
       }
-
       case 'textarea': {
         memo.push({
           type: 'TEXT_MULTI_LINE',
-          ...generateCommonConfig(field),
-        }, {
-          type: 'TEXT_SINGLE_LINE',
           ...generateCommonConfig(field),
         })
         break
@@ -45,10 +41,11 @@ export const generateSalesForceFieldDefinitions = (
         memo.push({
           type: 'CHOICE_SINGLE',
           ...generateCommonConfig(field),
-          choices: field.picklistValues?.map((v) => ({
-            label: v.label ?? v.value,
-            value: v.value,
-          })) ?? [],
+          choices:
+            field.picklistValues?.map((v) => ({
+              label: v.label ?? v.value,
+              value: v.value,
+            })) ?? [],
         })
         break
       }
@@ -56,10 +53,11 @@ export const generateSalesForceFieldDefinitions = (
         memo.push({
           type: 'CHOICE_MULTIPLE',
           ...generateCommonConfig(field),
-          choices: field.picklistValues?.map((v) => ({
-            label: v.label ?? v.value,
-            value: v.value,
-          })) ?? [],
+          choices:
+            field.picklistValues?.map((v) => ({
+              label: v.label ?? v.value,
+              value: v.value,
+            })) ?? [],
         })
         break
       }
@@ -67,10 +65,11 @@ export const generateSalesForceFieldDefinitions = (
         memo.push({
           type: 'CHOICE_MULTIPLE',
           ...generateCommonConfig(field),
-          choices: field.picklistValues?.map((v) => ({
-            label: v.label ?? v.value,
-            value: v.value,
-          })) ?? [],
+          choices:
+            field.picklistValues?.map((v) => ({
+              label: v.label ?? v.value,
+              value: v.value,
+            })) ?? [],
         })
         break
       }
@@ -116,13 +115,7 @@ export const generateSalesForceFieldDefinitions = (
         })
         break
       }
-      case 'int': {
-        memo.push({
-          type: 'INTEGER',
-          ...generateCommonConfig(field),
-        })
-        break
-      }
+      case 'int':
       case 'long': {
         memo.push({
           type: 'INTEGER',
@@ -130,13 +123,7 @@ export const generateSalesForceFieldDefinitions = (
         })
         break
       }
-      case 'double': {
-        memo.push({
-          type: 'NUMBER',
-          ...generateCommonConfig(field),
-        })
-        break
-      }
+      case 'double':
       case 'currency': {
         memo.push({
           type: 'NUMBER',
@@ -148,9 +135,6 @@ export const generateSalesForceFieldDefinitions = (
         memo.push({
           type: 'NUMBER',
           ...generateCommonConfig(field),
-        }, {
-          type: 'INTEGER',
-          ...generateCommonConfig(field),
         })
         break
       }
@@ -161,23 +145,19 @@ export const generateSalesForceFieldDefinitions = (
       }
 
       case 'json':
-      case'reference':
+      case 'reference':
       case 'id':
-      case'location':
+      case 'location':
       case 'datacategorygroupreference':
       case 'base64':
       case 'phone':
       case 'complexvalue':
       case 'anyType':
       case 'address': {
-        // Unsupported SalesForce field types
+        // Unsupported Salesforce field types
         break
       }
-
     }
     return memo
-
   }, [])
 }
-
-
