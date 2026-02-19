@@ -22,6 +22,7 @@ export const generateSalesforceFieldDefinitions = (
 ) => {
   return fieldDefinitions.reduce<SalesforceFieldDefinition[]>((memo, field) => {
     switch (field.type) {
+      case 'phone':
       case 'string':
       case 'encryptedstring': {
         memo.push({
@@ -87,13 +88,7 @@ export const generateSalesforceFieldDefinitions = (
         })
         break
       }
-      case 'datetime': {
-        memo.push({
-          type: 'DATETIME',
-          ...generateCommonConfig(field),
-        })
-        break
-      }
+      case 'datetime':
       case 'time': {
         memo.push({
           type: 'DATETIME',
@@ -146,7 +141,6 @@ export const generateSalesforceFieldDefinitions = (
       case 'location':
       case 'datacategorygroupreference':
       case 'base64':
-      case 'phone':
       case 'complexvalue':
       case 'anyType':
       case 'address': {
