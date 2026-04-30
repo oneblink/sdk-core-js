@@ -183,12 +183,16 @@ export function getElementSubmissionValue({
   formatTime,
   formatNumber,
   formatCurrency,
+  userProfile,
+  task,
+  taskGroup,
+  taskGroupInstance,
+  excludeNestedElements,
 }: {
   propertyName: string
   formElements: FormTypes.FormElement[]
-  submission: SubmissionTypes.S3SubmissionData['submission']
   useSubmissionValue?: boolean
-} & ReplaceInjectablesFormatters):
+} & ReplaceInjectablesBaseOptions):
   | {
       element: FormTypes.FormElement | undefined
       value: unknown
@@ -204,12 +208,16 @@ export function getElementSubmissionValue({
   formatTime,
   formatNumber,
   formatCurrency,
+  userProfile,
+  task,
+  taskGroup,
+  taskGroupInstance,
+  excludeNestedElements,
 }: {
   elementId: string
   formElements: FormTypes.FormElement[]
-  submission: SubmissionTypes.S3SubmissionData['submission']
   useSubmissionValue?: boolean
-} & ReplaceInjectablesFormatters):
+} & ReplaceInjectablesBaseOptions):
   | {
       element: FormTypes.FormElement | undefined
       value: unknown
@@ -226,13 +234,17 @@ export function getElementSubmissionValue({
   formatTime,
   formatNumber,
   formatCurrency,
+  userProfile,
+  task,
+  taskGroup,
+  taskGroupInstance,
+  excludeNestedElements,
 }: {
   elementId?: string
   propertyName?: string
   formElements: FormTypes.FormElement[]
-  submission: SubmissionTypes.S3SubmissionData['submission']
   useSubmissionValue?: boolean
-} & ReplaceInjectablesFormatters) {
+} & ReplaceInjectablesBaseOptions) {
   if (elementId === undefined && propertyName === undefined) {
     return undefined
   }
@@ -264,6 +276,11 @@ export function getElementSubmissionValue({
     formatDateTime,
     formatCurrency,
     formatNumber,
+    userProfile,
+    task,
+    taskGroup,
+    taskGroupInstance,
+    excludeNestedElements,
   })
 }
 
@@ -351,11 +368,12 @@ function formatValue({
   formatDateTime,
   formatCurrency,
   formatNumber,
+  ...baseOptions
 }: {
   element: FormTypes.FormElement | undefined
   unknownValue: unknown
   useSubmissionValue?: boolean
-} & ReplaceInjectablesFormatters) {
+} & Omit<ReplaceInjectablesBaseOptions, 'submission'>) {
   switch (element?.type) {
     case 'datetime': {
       const value = unknownValue as string
@@ -538,6 +556,41 @@ function formatValue({
           [value.category, value.subCategory, value.item]
             .filter((text) => !!text)
             .join(' / ') || undefined,
+      }
+    }
+    case 'repeatableSet': {
+      const entrySummary = element.entrySummary
+      if (!entrySummary) {
+        return { element, value: unknownValue }
+      }
+
+      if (!Array.isArray(unknownValue)) {
+        return { element, value: '' }
+      }
+
+      const value = unknownValue
+        .map((entry: unknown) => {
+          if (typeof entry !== 'object' || entry === null) {
+            return ''
+          }
+          const { text } = replaceInjectablesWithElementValues(entrySummary, {
+            ...baseOptions,
+            submission: entry as SubmissionTypes.S3SubmissionData['submission'],
+            formElements: element.elements,
+            formatDate,
+            formatDateTime,
+            formatTime,
+            formatNumber,
+            formatCurrency,
+          })
+          return text
+        })
+        // Each item is HTML produced from entrySummary (not plain labels). Joining
+        // with '' stacks adjacent markup; it is not concatenating words (e.g. "DogCatFrog").
+        .join('')
+      return {
+        element: element,
+        value,
       }
     }
     default: {

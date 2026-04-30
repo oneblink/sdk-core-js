@@ -1,6 +1,7 @@
 import { describe, expect, test, it } from 'vitest'
 import {
   FormTypes,
+  MiscTypes,
   ScheduledTasksTypes,
   SubmissionTypes,
 } from '@oneblink/types'
@@ -474,6 +475,41 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
   })
 
   describe('getElementSubmissionValue', () => {
+    const defaultFormatters = {
+      formatDate: () => '',
+      formatTime: () => '',
+      formatDateTime: () => '',
+      formatNumber: () => '',
+      formatCurrency: () => '',
+    }
+
+    const repeatableSetChildText: FormTypes.TextElement = {
+      id: 'c1',
+      name: 'Child_Name',
+      type: 'text',
+      label: 'Child Name',
+      readOnly: false,
+      required: false,
+      conditionallyShow: false,
+      requiresAllConditionallyShowPredicates: false,
+      isElementLookup: false,
+      isDataLookup: false,
+    }
+
+    function repeatableSetElementWithSummary(
+      entrySummary: string | undefined,
+    ): FormTypes.RepeatableSetElement {
+      return {
+        id: 'rs1',
+        name: 'Children',
+        type: 'repeatableSet',
+        label: 'Children',
+        conditionallyShow: false,
+        elements: [repeatableSetChildText],
+        ...(entrySummary !== undefined ? { entrySummary } : {}),
+      }
+    }
+
     const formElements: FormTypes.FormElement[] = [
       {
         id: 'fbad2d53-ddf3-419d-8ff7-e9ef21167224',
@@ -563,11 +599,12 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         propertyName: 'name',
         submission,
         formElements,
-        formatDate: () => '',
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
       })
 
       expect(result).toEqual(
@@ -586,11 +623,12 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         elementId,
         submission,
         formElements,
-        formatDate: () => '',
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
       })
 
       expect(result).toEqual(
@@ -609,11 +647,7 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         propertyName: 'name',
         submission,
         formElements,
-        formatDate: () => '',
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
+        ...defaultFormatters,
       })
 
       expect(result).toEqual(
@@ -661,11 +695,13 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         propertyName: 'date',
         submission: { date: '2024-03-13' },
         formElements,
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
         formatDate: (v) => `date is ${v}`,
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
       })
 
       expect(result?.value).toBe('date is 2024-03-13')
@@ -676,11 +712,12 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
         propertyName: 'text',
         submission: { text: 'hello' },
         formElements: [],
-        formatDate: () => '',
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
       })
       expect(result?.value).toEqual('hello')
     })
@@ -698,13 +735,120 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
             elements: [],
           },
         ],
-        formatDate: () => '',
-        formatTime: () => '',
-        formatDateTime: () => '',
-        formatNumber: () => '',
-        formatCurrency: () => '',
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
       })
       expect(result).toEqual({ value: 'hello' })
+    })
+
+    it('should join repeatable set entrySummary HTML for each entry', () => {
+      const result = getElementSubmissionValue({
+        propertyName: 'Children',
+        submission: {
+          Children: [{ Child_Name: 'Ann' }, { Child_Name: 'Bob' }],
+        },
+        formElements: [
+          repeatableSetElementWithSummary('<span>{ELEMENT:Child_Name}</span>'),
+        ],
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
+      })
+
+      expect(result?.value).toBe('<span>Ann</span><span>Bob</span>')
+    })
+
+    it('should return undefined for repeatable set without entrySummary', () => {
+      const entries = [{ Child_Name: 'Ann' }]
+      const result = getElementSubmissionValue({
+        propertyName: 'Children',
+        submission: {
+          Children: entries,
+        },
+        formElements: [repeatableSetElementWithSummary(undefined)],
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
+      })
+
+      expect(result?.value).toEqual(entries)
+    })
+
+    it('should return entries when repeatable set entrySummary is empty', () => {
+      const entries = [{ Child_Name: 'Ann' }]
+      const result = getElementSubmissionValue({
+        propertyName: 'Children',
+        submission: {
+          Children: entries,
+        },
+        formElements: [repeatableSetElementWithSummary('')],
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
+      })
+
+      expect(result?.value).toEqual(entries)
+    })
+
+    it('should return an empty string when repeatable set submission is not an array', () => {
+      const result = getElementSubmissionValue({
+        propertyName: 'Children',
+        submission: {
+          Children: { Child_Name: 'not-array' },
+        } as SubmissionTypes.S3SubmissionData['submission'],
+        formElements: [
+          repeatableSetElementWithSummary('<div>{ELEMENT:Child_Name}</div>'),
+        ],
+        userProfile: undefined,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
+      })
+
+      expect(result?.value).toBe('')
+    })
+
+    it('should resolve USER and ELEMENT injectables in entrySummary', () => {
+      const userProfile: MiscTypes.UserProfile = {
+        userId: 'u1',
+        username: 'parent',
+        email: 'parent@example.com',
+      }
+
+      const result = getElementSubmissionValue({
+        propertyName: 'Children',
+        submission: {
+          Children: [{ Child_Name: 'Ann' }],
+        },
+        formElements: [
+          repeatableSetElementWithSummary(
+            '<p>{USER:email}</p><span>{ELEMENT:Child_Name}</span>',
+          ),
+        ],
+        userProfile,
+        task: undefined,
+        taskGroup: undefined,
+        taskGroupInstance: undefined,
+        excludeNestedElements: false,
+        ...defaultFormatters,
+      })
+
+      expect(result?.value).toBe('<p>parent@example.com</p><span>Ann</span>')
     })
   })
 })
