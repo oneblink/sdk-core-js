@@ -585,6 +585,8 @@ function formatValue({
           })
           return text
         })
+        // Each item is HTML produced from entrySummary (not plain labels). Joining
+        // with '' stacks adjacent markup; it is not concatenating words (e.g. "DogCatFrog").
         .join('')
       return {
         element: element,
