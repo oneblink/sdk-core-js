@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `getElementSubmissionValue()` formatting for `repeatableSet` elements with `entrySummary`: each entry is rendered with element injectables (and other injectables such as `USER`) and the results are concatenated.
+
+### Fixed
+
+- Element tag regex matching: use a fresh `RegExp` per `matchElementsTagRegex()` call so shared `/g` patterns do not retain `lastIndex` across nested or concurrent use.
+
 ## [9.1.0] - 2026-02-23
 
 ### Added

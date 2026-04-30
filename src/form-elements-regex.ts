@@ -91,16 +91,17 @@ export function matchElementsTagRegex(
   const useSubmissionValue =
     typeof options !== 'string' && !!options.useSubmissionValue
   let matches
-  const rootRegex = useSubmissionValue
-    ? RootSubmissionValueElementRegex
-    : RootElementRegex
-  const nestedRegex = useSubmissionValue
-    ? NestedSubmissionValueElementRegex
-    : NestedElementRegex
-  while (
-    (matches = (excludeNestedElements ? rootRegex : nestedRegex).exec(text)) !==
-    null
-  ) {
+  const regexTemplate = useSubmissionValue
+    ? excludeNestedElements
+      ? RootSubmissionValueElementRegex
+      : NestedSubmissionValueElementRegex
+    : excludeNestedElements
+      ? RootElementRegex
+      : NestedElementRegex
+  // Fresh RegExp per call so re-entrant matchElementsTagRegex (and concurrent
+  // callers) do not share mutable lastIndex on the exported /g patterns.
+  const regex = new RegExp(regexTemplate.source, regexTemplate.flags)
+  while ((matches = regex.exec(text)) !== null) {
     if (matches?.length < 3) continue
 
     const elementName = matches[2]
