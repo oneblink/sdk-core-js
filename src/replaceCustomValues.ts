@@ -564,12 +564,11 @@ function formatValue({
         return { element, value: unknownValue }
       }
 
-      const entries = unknownValue as unknown
-      if (!Array.isArray(entries)) {
+      if (!Array.isArray(unknownValue)) {
         return { element, value: '' }
       }
 
-      const value = entries
+      const value = unknownValue
         .map((entry: unknown) => {
           if (typeof entry !== 'object' || entry === null) {
             return ''
