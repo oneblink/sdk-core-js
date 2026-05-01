@@ -258,8 +258,34 @@ export function getElementSubmissionValue({
       submission,
     })
   } else if (propertyName) {
+    const scopedPropertyName =
+      normalizePipeDelimitedPropertyNameForSubmissionScope(
+        propertyName,
+        submission,
+      )
+    if (scopedPropertyName.includes('|')) {
+      const piped = getElementSubmissionValueForPipeDelimitedProperty({
+        propertyName: scopedPropertyName,
+        formElements,
+        submission,
+        useSubmissionValue,
+        formatDate,
+        formatDateTime,
+        formatTime,
+        formatNumber,
+        formatCurrency,
+        userProfile,
+        task,
+        taskGroup,
+        taskGroupInstance,
+        excludeNestedElements,
+      })
+      if (piped !== undefined) {
+        return piped
+      }
+    }
     result = getElementSubmissionValueByName({
-      propertyName,
+      propertyName: scopedPropertyName,
       formElements,
       submission,
     })
@@ -282,6 +308,135 @@ export function getElementSubmissionValue({
     taskGroupInstance,
     excludeNestedElements,
   })
+}
+
+/**
+ * Drop leading `Outer|` segments when `Outer` is not a key on the current
+ * submission so `{ELEMENT:pokemon|abilities}` resolves like `{ELEMENT:abilities}`
+ * inside one `pokemon` row.
+ */
+function normalizePipeDelimitedPropertyNameForSubmissionScope(
+  propertyName: string,
+  submission: SubmissionTypes.S3SubmissionData['submission'],
+): string {
+  if (!propertyName.includes('|')) {
+    return propertyName
+  }
+  const parts = propertyName.split('|').filter((segment) => segment.length > 0)
+  const pathParts = [...parts]
+  while (
+    pathParts.length > 1 &&
+    (!Object.prototype.hasOwnProperty.call(submission, pathParts[0]) ||
+      submission[pathParts[0] as keyof typeof submission] === undefined ||
+      submission[pathParts[0] as keyof typeof submission] === null)
+  ) {
+    pathParts.shift()
+  }
+  return pathParts.join('|')
+}
+
+/**
+ * Resolve `{ELEMENT:Outer|Inner}` (and deeper chains) for submission data where
+ * the first segment is a repeatable set name on `submission`. Each entry is
+ * resolved with the remainder of the path; results are concatenated (same
+ * convention as nested repeatable `entrySummary` HTML fragments).
+ *
+ * `propertyName` must already be {@link normalizePipeDelimitedPropertyNameForSubmissionScope}d.
+ */
+function getElementSubmissionValueForPipeDelimitedProperty(
+  options: {
+    propertyName: string
+    formElements: FormTypes.FormElement[]
+    submission: SubmissionTypes.S3SubmissionData['submission']
+    useSubmissionValue?: boolean
+  } & ReplaceInjectablesBaseOptions,
+):
+  | {
+      element: FormTypes.FormElement | undefined
+      value: unknown
+    }
+  | undefined {
+  const {
+    propertyName,
+    formElements,
+    submission,
+    useSubmissionValue,
+    formatDate,
+    formatDateTime,
+    formatTime,
+    formatNumber,
+    formatCurrency,
+    userProfile,
+    task,
+    taskGroup,
+    taskGroupInstance,
+    excludeNestedElements,
+  } = options
+
+  const pathParts = propertyName.split('|').filter((segment) => segment.length > 0)
+  if (pathParts.length < 2) {
+    return undefined
+  }
+
+  const outerKey = pathParts[0] as keyof typeof submission
+  const innerPath = pathParts.slice(1).join('|')
+  const outerValue = submission[outerKey]
+
+  const outerElement = findFormElement(
+    formElements,
+    (el) =>
+      'name' in el &&
+      el.name === outerKey &&
+      el.type === 'repeatableSet',
+  ) as FormTypes.RepeatableSetElement | undefined
+
+  if (
+    !outerElement ||
+    outerElement.type !== 'repeatableSet' ||
+    !Array.isArray(outerElement.elements) ||
+    !Array.isArray(outerValue)
+  ) {
+    return undefined
+  }
+
+  const innerOptionsBase = {
+    formElements: outerElement.elements,
+    useSubmissionValue,
+    formatDate,
+    formatDateTime,
+    formatTime,
+    formatNumber,
+    formatCurrency,
+    userProfile,
+    task,
+    taskGroup,
+    taskGroupInstance,
+    excludeNestedElements,
+  }
+
+  const pieces: string[] = []
+  let leafElement: FormTypes.FormElement | undefined
+  for (const entry of outerValue) {
+    if (typeof entry !== 'object' || entry === null) {
+      continue
+    }
+    const inner = getElementSubmissionValue({
+      propertyName: innerPath,
+      submission: entry as SubmissionTypes.S3SubmissionData['submission'],
+      ...innerOptionsBase,
+    })
+    if (inner?.value !== undefined && inner?.value !== null) {
+      pieces.push(String(inner.value))
+    }
+    if (!leafElement && inner?.element) {
+      leafElement = inner.element
+    }
+  }
+
+  return {
+    element: leafElement,
+    value: pieces.join(''),
+  }
 }
 
 function getElementSubmissionValueByName({

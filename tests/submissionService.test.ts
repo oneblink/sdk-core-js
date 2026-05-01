@@ -850,6 +850,163 @@ describe('replaceInjectablesWithSubmissionValues()', () => {
 
       expect(result?.value).toBe('<p>parent@example.com</p><span>Ann</span>')
     })
+
+    it('resolves {ELEMENT:Parent|Child} inside a repeatable row when Parent is not a submission key', () => {
+      const abilityMove: FormTypes.AutoCompleteElement = {
+        id: 'ab1',
+        name: 'ability_name',
+        type: 'autocomplete',
+        label: 'Move',
+        placeholderValue: '',
+        conditionallyShow: false,
+        readOnly: false,
+        required: true,
+        isDataLookup: false,
+        isElementLookup: false,
+        optionsType: 'CUSTOM',
+        conditionallyShowOptions: false,
+        options: [
+          { id: 'o1', label: 'Tackle', value: 'tackle', displayAlways: false },
+          { id: 'o2', label: 'Growl', value: 'growl', displayAlways: false },
+        ],
+      }
+
+      const abilitiesRepeatable: FormTypes.RepeatableSetElement = {
+        id: 'rs-abilities',
+        name: 'abilities',
+        type: 'repeatableSet',
+        label: 'Moves',
+        conditionallyShow: false,
+        readOnly: false,
+        minSetEntries: 1,
+        maxSetEntries: 4,
+        elements: [abilityMove],
+        entrySummary: '<div>{ELEMENT:ability_name}</div>',
+      }
+
+      const pokemonRepeatable: FormTypes.RepeatableSetElement = {
+        id: 'rs-pokemon',
+        name: 'pokemon',
+        type: 'repeatableSet',
+        label: 'Pokemon',
+        conditionallyShow: false,
+        readOnly: false,
+        minSetEntries: 1,
+        maxSetEntries: 6,
+        elements: [abilitiesRepeatable],
+      }
+
+      const pokemonRow: SubmissionTypes.S3SubmissionData['submission'] = {
+        abilities: [{ ability_name: 'tackle' }, { ability_name: 'growl' }],
+      }
+
+      const result = replaceInjectablesWithElementValues(
+        'Moves: {ELEMENT:pokemon|abilities}',
+        {
+          userProfile: undefined,
+          task: undefined,
+          taskGroup: undefined,
+          taskGroupInstance: undefined,
+          formatDateTime: (value) => new Date(value).toString(),
+          formatDate: (value) => new Date(value).toDateString(),
+          formatTime: (value) => new Date(value).toTimeString(),
+          formatNumber: (value) => value.toString(),
+          formatCurrency: (value) => value.toFixed(2),
+          submission: pokemonRow,
+          formElements: pokemonRepeatable.elements,
+          excludeNestedElements: false,
+        },
+      )
+
+      expect(result).toEqual({
+        text: 'Moves: <div>Tackle</div><div>Growl</div>',
+        hadAllInjectablesReplaced: true,
+      })
+    })
+
+    it('resolves {ELEMENT:Parent|Child} from root submission across Parent rows', () => {
+      const abilityMove: FormTypes.AutoCompleteElement = {
+        id: 'ab1',
+        name: 'ability_name',
+        type: 'autocomplete',
+        label: 'Move',
+        placeholderValue: '',
+        conditionallyShow: false,
+        readOnly: false,
+        required: true,
+        isDataLookup: false,
+        isElementLookup: false,
+        optionsType: 'CUSTOM',
+        conditionallyShowOptions: false,
+        options: [
+          { id: 'o1', label: 'Tackle', value: 'tackle', displayAlways: false },
+          { id: 'o2', label: 'Growl', value: 'growl', displayAlways: false },
+          {
+            id: 'o3',
+            label: 'Scratch',
+            value: 'scratch',
+            displayAlways: false,
+          },
+        ],
+      }
+
+      const abilitiesRepeatable: FormTypes.RepeatableSetElement = {
+        id: 'rs-abilities',
+        name: 'abilities',
+        type: 'repeatableSet',
+        label: 'Moves',
+        conditionallyShow: false,
+        readOnly: false,
+        minSetEntries: 1,
+        maxSetEntries: 4,
+        elements: [abilityMove],
+        entrySummary: '<div>{ELEMENT:ability_name}</div>',
+      }
+
+      const pokemonRepeatable: FormTypes.RepeatableSetElement = {
+        id: 'rs-pokemon',
+        name: 'pokemon',
+        type: 'repeatableSet',
+        label: 'Pokemon',
+        conditionallyShow: false,
+        readOnly: false,
+        minSetEntries: 1,
+        maxSetEntries: 6,
+        elements: [abilitiesRepeatable],
+      }
+
+      const submission: SubmissionTypes.S3SubmissionData['submission'] = {
+        pokemon: [
+          { abilities: [{ ability_name: 'tackle' }] },
+          {
+            abilities: [{ ability_name: 'growl' }, { ability_name: 'scratch' }],
+          },
+        ],
+      }
+
+      const result = replaceInjectablesWithElementValues(
+        '{ELEMENT:pokemon|abilities}',
+        {
+          userProfile: undefined,
+          task: undefined,
+          taskGroup: undefined,
+          taskGroupInstance: undefined,
+          formatDateTime: (value) => new Date(value).toString(),
+          formatDate: (value) => new Date(value).toDateString(),
+          formatTime: (value) => new Date(value).toTimeString(),
+          formatNumber: (value) => value.toString(),
+          formatCurrency: (value) => value.toFixed(2),
+          submission,
+          formElements: [pokemonRepeatable],
+          excludeNestedElements: false,
+        },
+      )
+
+      expect(result).toEqual({
+        text: '<div>Tackle</div><div>Growl</div><div>Scratch</div>',
+        hadAllInjectablesReplaced: true,
+      })
+    })
   })
 })
 
