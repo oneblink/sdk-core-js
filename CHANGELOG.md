@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [9.2.0] - 2026-05-07
+
 ### Added
 
 - `getElementSubmissionValue()` formatting for `repeatableSet` elements with `entrySummary`: each entry is rendered with element injectables (and other injectables such as `USER`) and the results are concatenated.
