@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- `npm audit fix`
+
 ## [9.2.1] - 2026-06-18
 
 ### Fixed
