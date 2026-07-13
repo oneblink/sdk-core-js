@@ -43,7 +43,7 @@
   ],
   "homepage": "https://github.com/oneblink/sdk-core-js",
   "keywords": [],
-  "license": "GPL-3.0-only",
+  "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "publishConfig": {
