@@ -1,10 +1,6 @@
 import { ConditionTypes } from '@oneblink/types'
 import { typeCastService } from '../index.js'
-import {
-  AddOffsetToDate,
-  FormElementsCtrl,
-  ParseDate,
-} from './types.js'
+import { AddOffsetToDate, FormElementsCtrl, ParseDate } from './types.js'
 
 function getElementValue(
   formElementsCtrl: FormElementsCtrl,
@@ -21,10 +17,7 @@ function getElementValue(
       return typeof value === 'string' && value ? value : undefined
     }
   } else if (formElementsCtrl.parentFormElementsCtrl) {
-    return getElementValue(
-      formElementsCtrl.parentFormElementsCtrl,
-      elementId,
-    )
+    return getElementValue(formElementsCtrl.parentFormElementsCtrl, elementId)
   }
   return undefined
 }
@@ -51,7 +44,10 @@ function resolveDateValue(
     return undefined
   }
 
-  if (!dateValue.daysOffset) {
+  if (
+    typeof dateValue.daysOffset !== 'number' ||
+    Number.isNaN(dateValue.daysOffset)
+  ) {
     return date
   }
 

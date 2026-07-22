@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ConditionTypes, FormTypes } from '@oneblink/types'
 import evaluateConditionalSubmissionTimestampPredicate from '../../src/conditionalLogicService/evaluateConditionalSubmissionTimestampPredicate'
 import { evaluateConditionalPredicates } from '../../src/conditionalLogicService'
@@ -86,6 +86,30 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         addDaysToDate,
       }),
     ).toBe(false)
+  })
+
+  test('daysOffset of 0 still calls addDaysToDate', () => {
+    const addDaysToDateSpy = vi.fn(addDaysToDate)
+    const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
+      type: 'SUBMISSION_TIMESTAMP',
+      operator: 'BEFORE',
+      compareWith: 'VALUE',
+      value: '2026-08-01',
+      daysOffset: 0,
+    }
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-15T00:00:00.000Z',
+        parseDate,
+        addDaysToDate: addDaysToDateSpy,
+      }),
+    ).toBe(true)
+
+    expect(addDaysToDateSpy).toHaveBeenCalledTimes(1)
+    expect(addDaysToDateSpy).toHaveBeenCalledWith(expect.any(Date), 0)
   })
 
   test('BEFORE with date element and daysOffset', () => {
