@@ -65,8 +65,8 @@ describe('generateFormElementsConditionallyShown', () => {
   test('Dependant option element will evaluate options as "loading" when waiting for dynamic option dependencies to load and dependency has option selected', () => {
     const result = generateFormElementsConditionallyShown({
       formElements: [dynamicOptionsElement, dependantOptionsElement],
-      submission: { dynamic: 'option1' },
-    })
+      submission: { dynamic: 'option1' }
+  })
     expect(
       result.dependant?.type === 'formElement' &&
         result.dependant?.dependencyIsLoading,
@@ -76,8 +76,8 @@ describe('generateFormElementsConditionallyShown', () => {
   test('Dependant option element will evaluate options as "show" when dynamic option dependencies have not loaded but nothing selected in dependency', () => {
     const result = generateFormElementsConditionallyShown({
       formElements: [dynamicOptionsElement, dependantOptionsElement],
-      submission: {},
-    })
+      submission: {}
+  })
     expect(
       result.dependant?.type === 'formElement' &&
         result.dependant?.options?.length === 2 &&
@@ -154,8 +154,8 @@ describe('generateFormElementsConditionallyShown', () => {
       ],
       submission: {
         rs: [{ switch_one: true, switch_two: true }],
-      },
-    })
+      }
+  })
     expect(result).toEqual({
       rs: {
         type: 'repeatableSet',

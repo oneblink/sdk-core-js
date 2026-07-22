@@ -35,27 +35,45 @@ export type FormElementConditionallyShown =
 
 export type ErrorCallback = (error: Error) => void
 
-const handleConditionallyShowElement = (
-  formElementsCtrl: FormElementsCtrl,
-  element: FormTypes.FormElement,
-  errorCallback: ErrorCallback | undefined,
-) => {
+const handleConditionallyShowElement = ({
+  formElementsCtrl,
+  element,
+  errorCallback,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  element: FormTypes.FormElement
+  errorCallback: ErrorCallback | undefined
+}) => {
   try {
-    return conditionallyShowElement(formElementsCtrl, element, [])
+    return conditionallyShowElement({
+      formElementsCtrl,
+      elementToEvaluate: element,
+      elementsEvaluated: [],
+    })
   } catch (error) {
     errorCallback?.(error as Error)
     return false
   }
 }
 
-const handleConditionallyShowOption = (
-  formElementsCtrl: FormElementsCtrl,
-  element: FormTypes.FormElementWithOptions,
-  option: FormTypes.ChoiceElementOption,
-  errorCallback: ErrorCallback | undefined,
-): ShouldShowOption => {
+const handleConditionallyShowOption = ({
+  formElementsCtrl,
+  element,
+  option,
+  errorCallback,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  element: FormTypes.FormElementWithOptions
+  option: FormTypes.ChoiceElementOption
+  errorCallback: ErrorCallback | undefined
+}): ShouldShowOption => {
   try {
-    return conditionallyShowOption(formElementsCtrl, element, option, [])
+    return conditionallyShowOption({
+      formElementsCtrl,
+      elementToEvaluate: element,
+      optionToEvaluate: option,
+      optionsEvaluated: [],
+    })
   } catch (error) {
     errorCallback?.(error as Error)
     return 'HIDE'
@@ -93,11 +111,11 @@ const generateFormElementsConditionallyShownWithParent = ({
             formElementsConditionallyShown[element.id]
           const isHidden = formElementConditionallyShown
             ? formElementConditionallyShown.isHidden
-            : !handleConditionallyShowElement(
+            : !handleConditionallyShowElement({
                 formElementsCtrl,
                 element,
                 errorCallback,
-              )
+              })
 
           formElementsConditionallyShown[element.id] = {
             type: 'formElement',
@@ -137,15 +155,16 @@ const generateFormElementsConditionallyShownWithParent = ({
             | undefined
           formElementsConditionallyShown[element.name] = {
             type: 'formElements',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
             formElements: generateFormElementsConditionallyShownWithParent({
               formElements: element.elements || [],
               submission: nestedModel || {},
               parentFormElementsCtrl: formElementsCtrl,
+              errorCallback,
             }),
           }
           break
@@ -159,11 +178,11 @@ const generateFormElementsConditionallyShownWithParent = ({
             | undefined
           formElementsConditionallyShown[element.name] = {
             type: 'repeatableSet',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
             entries: (entries || []).reduce(
               (
                 result: Record<
@@ -178,6 +197,7 @@ const generateFormElementsConditionallyShownWithParent = ({
                     formElements: element.elements,
                     submission: entry,
                     parentFormElementsCtrl: formElementsCtrl,
+                    errorCallback,
                   })
                 return result
               },
@@ -192,11 +212,11 @@ const generateFormElementsConditionallyShownWithParent = ({
           }
           const formElementConditionallyShown: FormElementConditionallyShown = {
             type: 'formElement',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
           }
 
           if (!formElementConditionallyShown.isHidden) {
@@ -209,12 +229,12 @@ const generateFormElementsConditionallyShownWithParent = ({
             ) {
               const newOptions = []
               for (const option of optionsElement.options) {
-                const optionPredicatesResult = handleConditionallyShowOption(
+                const optionPredicatesResult = handleConditionallyShowOption({
                   formElementsCtrl,
-                  optionsElement,
+                  element: optionsElement,
                   option,
                   errorCallback,
-                )
+                })
                 switch (optionPredicatesResult) {
                   case 'SHOW': {
                     newOptions.push(option)
@@ -307,7 +327,6 @@ const generateFormElementsConditionallyShownWithParent = ({
  *         isElementLookup: false,
  *       },
  *     ],
- *     parentFormElementsCtrl: undefined,
  *     errorCallback: (error) => {
  *       //do something with the error here
  *       console.error(error)

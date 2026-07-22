@@ -1,6 +1,6 @@
 import { FormTypes, ConditionTypes } from '@oneblink/types'
 import { FormElementsCtrl } from './types.js'
-import evaluateConditionalPredicate from './evaluateConditionalPredicate.js'
+import evaluateFormElementConditionalPredicate from './evaluateFormElementConditionalPredicate.js'
 
 const getParentFormElements = (
   formElementsCtrl: FormElementsCtrl,
@@ -24,12 +24,16 @@ const getParentFormElements = (
   return []
 }
 
-export function conditionallyShowByPredicate(
-  formElementsCtrl: FormElementsCtrl,
-  predicate: ConditionTypes.ConditionalPredicate,
-  elementsEvaluated: Array<{ id: string; label: string }>,
-): boolean {
-  const predicateElement = evaluateConditionalPredicate({
+export function conditionallyShowByPredicate({
+  formElementsCtrl,
+  predicate,
+  elementsEvaluated,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  predicate: ConditionTypes.FormElementConditionalPredicate
+  elementsEvaluated: Array<{ id: string; label: string }>
+}): boolean {
+  const predicateElement = evaluateFormElementConditionalPredicate({
     predicate,
     formElementsCtrl,
   })
@@ -48,27 +52,33 @@ export function conditionallyShowByPredicate(
   )
   for (const parentFormElement of parentFormElements) {
     if (
-      !conditionallyShowElement(formElementsCtrl, parentFormElement, [
-        ...elementsEvaluated,
-      ])
+      !conditionallyShowElement({
+        formElementsCtrl,
+        elementToEvaluate: parentFormElement,
+        elementsEvaluated: [...elementsEvaluated],
+      })
     ) {
       return false
     }
   }
 
   // Check to see if the model has one of the valid values to show the element
-  return conditionallyShowElement(
+  return conditionallyShowElement({
     formElementsCtrl,
-    predicateElement,
+    elementToEvaluate: predicateElement,
     elementsEvaluated,
-  )
+  })
 }
 
-export default function conditionallyShowElement(
-  formElementsCtrl: FormElementsCtrl,
-  elementToEvaluate: FormTypes.FormElement,
-  elementsEvaluated: Array<{ id: string; label: string }>,
-): boolean {
+export default function conditionallyShowElement({
+  formElementsCtrl,
+  elementToEvaluate,
+  elementsEvaluated,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  elementToEvaluate: FormTypes.FormElement
+  elementsEvaluated: Array<{ id: string; label: string }>
+}): boolean {
   // If the element does not have the `conditionallyShow` flag set,
   // we can always show the element.
   if (
@@ -102,14 +112,16 @@ export default function conditionallyShowElement(
   }
 
   const predicateFunction = (
-    predicate: ConditionTypes.ConditionalPredicate,
+    predicate: ConditionTypes.FormElementConditionalPredicate,
   ) => {
     // Spread the array of elements evaluated so that each predicate can
     // evaluate the tree without causing false positives for infinite
     // loop conditional logic
-    return conditionallyShowByPredicate(formElementsCtrl, predicate, [
-      ...elementsEvaluated,
-    ])
+    return conditionallyShowByPredicate({
+      formElementsCtrl,
+      predicate,
+      elementsEvaluated: [...elementsEvaluated],
+    })
   }
 
   if (elementToEvaluate.requiresAllConditionallyShowPredicates) {
