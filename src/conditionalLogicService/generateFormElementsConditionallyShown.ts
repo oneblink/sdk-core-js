@@ -6,6 +6,7 @@ import conditionallyShowOption, {
   ShouldShowOption,
 } from './conditionallyShowOption.js'
 import { typeCastService } from '../index.js'
+import evaluateFormElementConditionalPredicate from './evaluateFormElementConditionalPredicate.js'
 
 export type FormElementsConditionallyShown = Record<
   string,
@@ -87,6 +88,13 @@ export type FormElementsConditionallyShownParameters = {
   submission: SubmissionTypes.S3SubmissionData['submission']
   /** Optional callback for handling errors caught during the evaluation */
   errorCallback?: ErrorCallback
+  /** Conditionally enable form submission based on predicates */
+  enableSubmission: FormTypes.Form['enableSubmission'] | undefined
+}
+
+export type FormElementsConditionallyShownResult = {
+  formElementsConditionallyShown: FormElementsConditionallyShown
+  isSubmissionEnabled: boolean
 }
 
 const generateFormElementsConditionallyShownWithParent = ({
@@ -94,8 +102,11 @@ const generateFormElementsConditionallyShownWithParent = ({
   submission,
   parentFormElementsCtrl,
   errorCallback,
-}: FormElementsConditionallyShownParameters & {
-  parentFormElementsCtrl?: FormElementsCtrl['parentFormElementsCtrl']
+}: {
+  formElements: FormTypes.FormElement[]
+  submission: SubmissionTypes.S3SubmissionData['submission']
+  errorCallback: ErrorCallback | undefined
+  parentFormElementsCtrl: FormElementsCtrl['parentFormElementsCtrl'] | undefined
 }): FormElementsConditionallyShown => {
   const formElementsCtrl = {
     flattenedElements: flattenFormElements(formElements),
@@ -267,14 +278,14 @@ const generateFormElementsConditionallyShownWithParent = ({
 }
 
 /**
- * Given a form element and submission data, evaluate which elements are
- * currently shown. The function also takes an optional errorCallback for
- * handling errors caught during the evaluation.
+ * Given form elements and submission data, evaluate which elements are
+ * currently shown and whether submission is enabled. The function also takes an
+ * optional errorCallback for handling errors caught during the evaluation.
  *
  * #### Example
  *
  * ```js
- * const formElementsConditionallyShown =
+ * const { formElementsConditionallyShown, isSubmissionEnabled } =
  *   conditionalLogicService.generateFormElementsConditionallyShown({
  *     submission: {
  *       radio: ['hide'],
@@ -338,22 +349,79 @@ const generateFormElementsConditionallyShownWithParent = ({
  *
  * ```json
  * {
- *   "radio": {
- *     "isHidden": false,
- *     "type": "formElement"
+ *   "formElementsConditionallyShown": {
+ *     "radio": {
+ *       "isHidden": false,
+ *       "type": "formElement"
+ *     },
+ *     "text": {
+ *       "isHidden": true,
+ *       "type": "formElement"
+ *     }
  *   },
- *   "text": {
- *     "isHidden": true,
- *     "type": "formElement"
- *   }
+ *   "isSubmissionEnabled": true
  * }
  * ```
  *
  * @param parameters
  * @returns
  */
-export function generateFormElementsConditionallyShown(
-  parameters: FormElementsConditionallyShownParameters,
-): FormElementsConditionallyShown {
-  return generateFormElementsConditionallyShownWithParent(parameters)
+export function generateFormElementsConditionallyShown({
+  formElements,
+  submission,
+  errorCallback,
+  enableSubmission,
+}: FormElementsConditionallyShownParameters): FormElementsConditionallyShownResult {
+  const formElementsConditionallyShown =
+    generateFormElementsConditionallyShownWithParent({
+      formElements,
+      submission,
+      errorCallback,
+      parentFormElementsCtrl: undefined,
+    })
+
+  if (!enableSubmission?.conditionalPredicates.length) {
+    return {
+      formElementsConditionallyShown,
+      isSubmissionEnabled: true,
+    }
+  }
+
+  const formElementsCtrl: FormElementsCtrl = {
+    flattenedElements: flattenFormElements(formElements),
+    model: submission,
+  }
+
+  const predicateFn = (
+    predicate: NonNullable<
+      FormTypes.Form['enableSubmission']
+    >['conditionalPredicates'][number],
+  ) => {
+    try {
+      const predicateElement = evaluateFormElementConditionalPredicate({
+        predicate,
+        formElementsCtrl,
+      })
+      if (!predicateElement) {
+        return false
+      }
+
+      // Reuse visibility already computed above instead of re-evaluating
+      // conditionally show predicates for the predicate element / parents.
+      const shown = formElementsConditionallyShown[predicateElement.name]
+      return !!shown && !shown.isHidden
+    } catch (error) {
+      errorCallback?.(error as Error)
+      return false
+    }
+  }
+
+  const isSubmissionEnabled = enableSubmission.requiresAllConditionalPredicates
+    ? enableSubmission.conditionalPredicates.every(predicateFn)
+    : enableSubmission.conditionalPredicates.some(predicateFn)
+
+  return {
+    formElementsConditionallyShown,
+    isSubmissionEnabled,
+  }
 }

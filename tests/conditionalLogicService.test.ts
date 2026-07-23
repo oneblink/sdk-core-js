@@ -96,14 +96,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -122,14 +115,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['b'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -148,14 +134,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         radio: 'a',
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -174,14 +153,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         radio: 'b',
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -205,14 +177,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a', 'b'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -236,14 +201,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -267,14 +225,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(resultA).toBe(true)
 
@@ -296,14 +247,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['b'],
-      },
-      submissionTimestamp: new Date().toISOString(),
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
+      }
     })
     expect(resultB).toBe(true)
   })
@@ -649,8 +593,9 @@ describe('generateFormElementsConditionallyShown', () => {
         result.setUTCDate(result.getUTCDate() + days)
         return result
       },
+    
     })
-    expect(result).toEqual({
+    expect(result.formElementsConditionallyShown).toEqual({
       comparisonNumber: {
         isHidden: false,
         type: 'formElement',
@@ -836,8 +781,9 @@ describe('generateFormElementsConditionallyShown', () => {
         result.setUTCDate(result.getUTCDate() + days)
         return result
       },
+    
     })
-    expect(result).toEqual({
+    expect(result.formElementsConditionallyShown).toEqual({
       first_option: {
         isHidden: true,
         type: 'formElement',

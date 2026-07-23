@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - **[BREAKING]** `evaluateConditionalPredicates()` now requires `submissionTimestamp: string`, `parseDate: (value: string) => Date`, and `addDaysToDate: (date: Date, offset: number) => Date`.
 - **[BREAKING]** `paymentService.checkForPaymentEvent()` and `schedulingService.checkForSchedulingEvent()` now take a single options object (`{ definition, submission, submissionTimestamp, parseDate, addDaysToDate }`).
+- **[BREAKING]** `generateFormElementsConditionallyShown()` now returns `{ formElementsConditionallyShown, isSubmissionEnabled }` and accepts optional `enableSubmission`. Form-fill submission enablement is evaluated here (visibility-aware) instead of a separate `evaluateConditionalPredicates()` call.
 
 ## [9.2.2] - 2026-07-09
 

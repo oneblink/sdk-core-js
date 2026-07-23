@@ -68,8 +68,8 @@ describe('generateFormElementsConditionallyShown', () => {
       submission: { dynamic: 'option1' }
   })
     expect(
-      result.dependant?.type === 'formElement' &&
-        result.dependant?.dependencyIsLoading,
+      result.formElementsConditionallyShown.dependant?.type === 'formElement' &&
+        result.formElementsConditionallyShown.dependant?.dependencyIsLoading,
     ).toBe(true)
   })
 
@@ -79,9 +79,9 @@ describe('generateFormElementsConditionallyShown', () => {
       submission: {}
   })
     expect(
-      result.dependant?.type === 'formElement' &&
-        result.dependant?.options?.length === 2 &&
-        result.dependant?.dependencyIsLoading === undefined,
+      result.formElementsConditionallyShown.dependant?.type === 'formElement' &&
+        result.formElementsConditionallyShown.dependant?.options?.length === 2 &&
+        result.formElementsConditionallyShown.dependant?.dependencyIsLoading === undefined,
     ).toBe(true)
   })
 
@@ -156,7 +156,7 @@ describe('generateFormElementsConditionallyShown', () => {
         rs: [{ switch_one: true, switch_two: true }],
       }
   })
-    expect(result).toEqual({
+    expect(result.formElementsConditionallyShown).toEqual({
       rs: {
         type: 'repeatableSet',
         isHidden: false,
