@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { ConditionTypes, FormTypes } from '@oneblink/types'
-import evaluateConditionalPredicate from '../../src/conditionalLogicService/evaluateConditionalPredicate'
+import evaluateFormElementConditionalPredicate from '../../src/conditionalLogicService/evaluateFormElementConditionalPredicate'
 import { flattenFormElements } from '../../src/formElementsService'
 
-describe('evaluateConditionalPredicate', () => {
+describe('evaluateFormElementConditionalPredicate', () => {
   const predicate: ConditionTypes.ConditionalPredicate = {
     elementId: 'predicateNumber',
     type: 'NUMERIC',
@@ -46,7 +46,7 @@ describe('evaluateConditionalPredicate', () => {
   }
 
   test('should show root element', () => {
-    const isShown = evaluateConditionalPredicate({
+    const isShown = evaluateFormElementConditionalPredicate({
       predicate,
       formElementsCtrl: {
         flattenedElements: [
@@ -58,13 +58,13 @@ describe('evaluateConditionalPredicate', () => {
           predicateNumber: 1,
           comparisonNumber: 1,
         },
-      },
+      }
     })
     expect(isShown).toBe(predicateElement)
   })
 
   test('should hide root element', () => {
-    const isShown = evaluateConditionalPredicate({
+    const isShown = evaluateFormElementConditionalPredicate({
       predicate,
       formElementsCtrl: {
         flattenedElements: [
@@ -76,7 +76,7 @@ describe('evaluateConditionalPredicate', () => {
           predicateNumber: 1,
           comparisonNumber: 2,
         },
-      },
+      }
     })
     expect(isShown).toBe(undefined)
   })
@@ -90,7 +90,7 @@ describe('evaluateConditionalPredicate', () => {
       conditionallyShow: false,
       elements: [conditionalElement],
     }
-    const isShown = evaluateConditionalPredicate({
+    const isShown = evaluateFormElementConditionalPredicate({
       predicate,
       formElementsCtrl: {
         flattenedElements: repeatableSetElement.elements,
@@ -106,7 +106,7 @@ describe('evaluateConditionalPredicate', () => {
             comparisonNumber: 1,
           },
         },
-      },
+      }
     })
     expect(isShown).toBe(predicateElement)
   })
@@ -154,7 +154,7 @@ describe('evaluateConditionalPredicate', () => {
       conditionallyShow: false,
       elements: [comparisonElementOne, comparisonElementTwo],
     }
-    const isShown = evaluateConditionalPredicate({
+    const isShown = evaluateFormElementConditionalPredicate({
       predicate: nestedFormPredicate,
       formElementsCtrl: {
         flattenedElements: flattenFormElements([formFormElement]),
@@ -164,7 +164,7 @@ describe('evaluateConditionalPredicate', () => {
             comparisonNumberTwo: 1,
           },
         },
-      },
+      }
     })
 
     expect(isShown).toBe(formFormElement)
@@ -226,7 +226,7 @@ describe('evaluateConditionalPredicate', () => {
       conditionallyShow: false,
       elements: [childFormFormElement],
     }
-    const isShown = evaluateConditionalPredicate({
+    const isShown = evaluateFormElementConditionalPredicate({
       predicate: formPredicate,
       formElementsCtrl: {
         flattenedElements: flattenFormElements([parentFormFormElement]),
@@ -238,7 +238,7 @@ describe('evaluateConditionalPredicate', () => {
             },
           },
         },
-      },
+      }
     })
 
     expect(isShown).toBe(parentFormFormElement)
@@ -309,7 +309,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePoint,
         formElementsCtrl: {
           flattenedElements: [predicatePoint, shownElement],
@@ -318,8 +318,8 @@ describe('evaluateConditionalPredicate', () => {
               dataset: 'mailAddress',
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePoint)
     })
     test('should show element using NSW Point V3 PO Box', () => {
@@ -335,7 +335,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePointV3,
         formElementsCtrl: {
           flattenedElements: [predicatePointV3, shownElement],
@@ -346,8 +346,8 @@ describe('evaluateConditionalPredicate', () => {
               },
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePointV3)
     })
     test('should show element using NSW Point physical address', () => {
@@ -370,7 +370,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePointNoPO,
         formElementsCtrl: {
           flattenedElements: [predicatePoint, shownElement],
@@ -379,8 +379,8 @@ describe('evaluateConditionalPredicate', () => {
               dataset: 'GNAF',
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePoint)
     })
     test('should show element using NSW Point V3 physical address', () => {
@@ -403,7 +403,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePointNoPO,
         formElementsCtrl: {
           flattenedElements: [predicatePointV3, shownElement],
@@ -412,8 +412,8 @@ describe('evaluateConditionalPredicate', () => {
               properties: { dataset: 'gnaf,mailingAddress' },
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePointV3)
     })
     test('should show element using NSW Point with states', () => {
@@ -436,7 +436,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePointStates,
         formElementsCtrl: {
           flattenedElements: [predicatePoint, shownElement],
@@ -447,8 +447,8 @@ describe('evaluateConditionalPredicate', () => {
               },
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePoint)
     })
     test('should show element using NSW Point V3 with states', () => {
@@ -471,7 +471,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicatePointStates,
         formElementsCtrl: {
           flattenedElements: [predicatePointV3, shownElement],
@@ -482,8 +482,8 @@ describe('evaluateConditionalPredicate', () => {
               },
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicatePointV3)
     })
     test('should show element using Geoscape with States', () => {
@@ -499,7 +499,7 @@ describe('evaluateConditionalPredicate', () => {
         isDataLookup: false,
         isElementLookup: false,
       }
-      const isShown = evaluateConditionalPredicate({
+      const isShown = evaluateFormElementConditionalPredicate({
         predicate: conditionalPredicateGeoscape,
         formElementsCtrl: {
           flattenedElements: [predicateGeoscape, shownElement],
@@ -510,8 +510,8 @@ describe('evaluateConditionalPredicate', () => {
               },
             },
           },
-        },
-      })
+        }
+    })
       expect(isShown).toBe(predicateGeoscape)
     })
   })

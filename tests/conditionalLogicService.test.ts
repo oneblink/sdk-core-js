@@ -96,7 +96,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -115,7 +115,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['b'],
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -134,7 +134,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         radio: 'a',
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -153,7 +153,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         radio: 'b',
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -177,7 +177,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a', 'b'],
-      },
+      }
     })
     expect(result).toBe(true)
   })
@@ -201,7 +201,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
+      }
     })
     expect(result).toBe(false)
   })
@@ -225,7 +225,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['a'],
-      },
+      }
     })
     expect(resultA).toBe(true)
 
@@ -247,7 +247,7 @@ describe('evaluateConditionalPredicates', () => {
       formElements: generateFormElements(),
       submission: {
         checkboxes: ['b'],
-      },
+      }
     })
     expect(resultB).toBe(true)
   })
@@ -587,8 +587,15 @@ describe('generateFormElementsConditionallyShown', () => {
           ],
         },
       ],
+      parseDate: (value) => new Date(value),
+      addDaysToDate: (date, days) => {
+        const result = new Date(date.getTime())
+        result.setUTCDate(result.getUTCDate() + days)
+        return result
+      },
+    
     })
-    expect(result).toEqual({
+    expect(result.formElementsConditionallyShown).toEqual({
       comparisonNumber: {
         isHidden: false,
         type: 'formElement',
@@ -768,8 +775,15 @@ describe('generateFormElementsConditionallyShown', () => {
         },
       ],
       errorCallback,
+      parseDate: (value) => new Date(value),
+      addDaysToDate: (date, days) => {
+        const result = new Date(date.getTime())
+        result.setUTCDate(result.getUTCDate() + days)
+        return result
+      },
+    
     })
-    expect(result).toEqual({
+    expect(result.formElementsConditionallyShown).toEqual({
       first_option: {
         isHidden: true,
         type: 'formElement',

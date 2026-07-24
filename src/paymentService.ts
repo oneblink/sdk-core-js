@@ -8,6 +8,7 @@ import {
   getRootElementValueById,
   ReplaceInjectablesFormatters,
 } from './submissionService.js'
+import { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
 
 /**
  * Examine a submission and its form definition to validate whether a payment
@@ -16,17 +17,37 @@ import {
  * #### Example
  *
  * ```js
- * const result = paymentService.checkForPaymentEvent(form, submission)
+ * const result = paymentService.checkForPaymentEvent({
+ *   definition: form,
+ *   submission,
+ *   submissionTimestamp,
+ *   parseDate: (value) => new Date(value),
+ *   addDaysToDate: (date, days) => {
+ *     date.setUTCDate(date.getUTCDate() + days)
+ *     return date
+ *   },
+ * })
  * ```
  *
- * @param definition
- * @param submission
+ * @param options
  * @returns
  */
-export function checkForPaymentEvent(
-  definition: FormTypes.Form,
-  submission: SubmissionTypes.S3SubmissionData['submission'],
-):
+export function checkForPaymentEvent({
+  definition,
+  submission,
+  submissionTimestamp,
+  parseDate,
+  addDaysToDate,
+}: {
+  definition: FormTypes.Form
+  submission: SubmissionTypes.S3SubmissionData['submission']
+  /** ISO timestamp the form was submitted. When evaluating during submission, pass `new Date().toISOString()`. */
+  submissionTimestamp: string
+  /** Parse date/datetime strings when evaluating date based predicates */
+  parseDate: ParseDate
+  /** Add days to a date when evaluating date based predicates */
+  addDaysToDate: AddOffsetToDate
+}):
   | {
       paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent
       amount: number
@@ -45,6 +66,9 @@ export function checkForPaymentEvent(
             paymentSubmissionEvent.conditionallyExecutePredicates || [],
           submission: submission,
           formElements: definition.elements,
+          submissionTimestamp,
+          parseDate,
+          addDaysToDate,
         })
       )
     },

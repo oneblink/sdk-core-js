@@ -1,8 +1,11 @@
-import evaluateConditionalPredicate from './conditionalLogicService/evaluateConditionalPredicate.js'
+import evaluateFormElementConditionalPredicate from './conditionalLogicService/evaluateFormElementConditionalPredicate.js'
+import evaluateConditionalSubmissionTimestampPredicate from './conditionalLogicService/evaluateConditionalSubmissionTimestampPredicate.js'
 import { flattenFormElements } from './formElementsService.js'
 import { ConditionTypes, FormTypes, SubmissionTypes } from '@oneblink/types'
+import { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
 
 export * from './conditionalLogicService/generateFormElementsConditionallyShown.js'
+export type { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
 
 /**
  * Given a set of form elements and submission data, evaluate if predicates are
@@ -59,6 +62,12 @@ export * from './conditionalLogicService/generateFormElementsConditionallyShown.
  *         requiresAllConditionallyShowPredicates: false,
  *       },
  *     ],
+ *     submissionTimestamp: new Date().toISOString(),
+ *     parseDate: (value) => new Date(value),
+ *     addDaysToDate: (date, days) => {
+ *       date.setUTCDate(date.getUTCDate() + days)
+ *       return date
+ *     },
  *   },
  * )
  * ```
@@ -72,12 +81,21 @@ export function evaluateConditionalPredicates({
   conditionalPredicates,
   formElements,
   submission,
+  submissionTimestamp,
+  parseDate,
+  addDaysToDate,
 }: {
   isConditional: boolean
   requiresAllConditionalPredicates: boolean
   conditionalPredicates: ConditionTypes.ConditionalPredicate[]
   formElements: FormTypes.FormElement[]
   submission: SubmissionTypes.S3SubmissionData['submission']
+  /** ISO timestamp the form was submitted. When evaluating during submission, pass `new Date().toISOString()`. */
+  submissionTimestamp: string
+  /** Parse date/datetime strings when evaluating date based predicates */
+  parseDate: ParseDate
+  /** Add days to a date when evaluating date based predicates */
+  addDaysToDate: AddOffsetToDate
 }): boolean {
   if (!isConditional || !conditionalPredicates.length) {
     return true
@@ -87,11 +105,22 @@ export function evaluateConditionalPredicates({
     model: submission,
   }
 
-  const predicateFn = (predicate: ConditionTypes.ConditionalPredicate) =>
-    evaluateConditionalPredicate({
+  const predicateFn = (predicate: ConditionTypes.ConditionalPredicate) => {
+    if (predicate.type === 'SUBMISSION_TIMESTAMP') {
+      return evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp,
+        parseDate,
+        addDaysToDate,
+      })
+    }
+
+    return !!evaluateFormElementConditionalPredicate({
       predicate,
       formElementsCtrl,
     })
+  }
   if (requiresAllConditionalPredicates) {
     return conditionalPredicates.every(predicateFn)
   } else {

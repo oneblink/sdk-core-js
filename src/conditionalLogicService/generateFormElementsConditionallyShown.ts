@@ -6,6 +6,7 @@ import conditionallyShowOption, {
   ShouldShowOption,
 } from './conditionallyShowOption.js'
 import { typeCastService } from '../index.js'
+import evaluateFormElementConditionalPredicate from './evaluateFormElementConditionalPredicate.js'
 
 export type FormElementsConditionallyShown = Record<
   string,
@@ -35,27 +36,45 @@ export type FormElementConditionallyShown =
 
 export type ErrorCallback = (error: Error) => void
 
-const handleConditionallyShowElement = (
-  formElementsCtrl: FormElementsCtrl,
-  element: FormTypes.FormElement,
-  errorCallback: ErrorCallback | undefined,
-) => {
+const handleConditionallyShowElement = ({
+  formElementsCtrl,
+  element,
+  errorCallback,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  element: FormTypes.FormElement
+  errorCallback: ErrorCallback | undefined
+}) => {
   try {
-    return conditionallyShowElement(formElementsCtrl, element, [])
+    return conditionallyShowElement({
+      formElementsCtrl,
+      elementToEvaluate: element,
+      elementsEvaluated: [],
+    })
   } catch (error) {
     errorCallback?.(error as Error)
     return false
   }
 }
 
-const handleConditionallyShowOption = (
-  formElementsCtrl: FormElementsCtrl,
-  element: FormTypes.FormElementWithOptions,
-  option: FormTypes.ChoiceElementOption,
-  errorCallback: ErrorCallback | undefined,
-): ShouldShowOption => {
+const handleConditionallyShowOption = ({
+  formElementsCtrl,
+  element,
+  option,
+  errorCallback,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  element: FormTypes.FormElementWithOptions
+  option: FormTypes.ChoiceElementOption
+  errorCallback: ErrorCallback | undefined
+}): ShouldShowOption => {
   try {
-    return conditionallyShowOption(formElementsCtrl, element, option, [])
+    return conditionallyShowOption({
+      formElementsCtrl,
+      elementToEvaluate: element,
+      optionToEvaluate: option,
+      optionsEvaluated: [],
+    })
   } catch (error) {
     errorCallback?.(error as Error)
     return 'HIDE'
@@ -69,6 +88,13 @@ export type FormElementsConditionallyShownParameters = {
   submission: SubmissionTypes.S3SubmissionData['submission']
   /** Optional callback for handling errors caught during the evaluation */
   errorCallback?: ErrorCallback
+  /** Conditionally enable form submission based on predicates */
+  enableSubmission: FormTypes.Form['enableSubmission'] | undefined
+}
+
+export type FormElementsConditionallyShownResult = {
+  formElementsConditionallyShown: FormElementsConditionallyShown
+  isSubmissionEnabled: boolean
 }
 
 const generateFormElementsConditionallyShownWithParent = ({
@@ -76,8 +102,11 @@ const generateFormElementsConditionallyShownWithParent = ({
   submission,
   parentFormElementsCtrl,
   errorCallback,
-}: FormElementsConditionallyShownParameters & {
-  parentFormElementsCtrl?: FormElementsCtrl['parentFormElementsCtrl']
+}: {
+  formElements: FormTypes.FormElement[]
+  submission: SubmissionTypes.S3SubmissionData['submission']
+  errorCallback: ErrorCallback | undefined
+  parentFormElementsCtrl: FormElementsCtrl['parentFormElementsCtrl'] | undefined
 }): FormElementsConditionallyShown => {
   const formElementsCtrl = {
     flattenedElements: flattenFormElements(formElements),
@@ -93,11 +122,11 @@ const generateFormElementsConditionallyShownWithParent = ({
             formElementsConditionallyShown[element.id]
           const isHidden = formElementConditionallyShown
             ? formElementConditionallyShown.isHidden
-            : !handleConditionallyShowElement(
+            : !handleConditionallyShowElement({
                 formElementsCtrl,
                 element,
                 errorCallback,
-              )
+              })
 
           formElementsConditionallyShown[element.id] = {
             type: 'formElement',
@@ -137,15 +166,16 @@ const generateFormElementsConditionallyShownWithParent = ({
             | undefined
           formElementsConditionallyShown[element.name] = {
             type: 'formElements',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
             formElements: generateFormElementsConditionallyShownWithParent({
               formElements: element.elements || [],
               submission: nestedModel || {},
               parentFormElementsCtrl: formElementsCtrl,
+              errorCallback,
             }),
           }
           break
@@ -159,11 +189,11 @@ const generateFormElementsConditionallyShownWithParent = ({
             | undefined
           formElementsConditionallyShown[element.name] = {
             type: 'repeatableSet',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
             entries: (entries || []).reduce(
               (
                 result: Record<
@@ -178,6 +208,7 @@ const generateFormElementsConditionallyShownWithParent = ({
                     formElements: element.elements,
                     submission: entry,
                     parentFormElementsCtrl: formElementsCtrl,
+                    errorCallback,
                   })
                 return result
               },
@@ -192,11 +223,11 @@ const generateFormElementsConditionallyShownWithParent = ({
           }
           const formElementConditionallyShown: FormElementConditionallyShown = {
             type: 'formElement',
-            isHidden: !handleConditionallyShowElement(
+            isHidden: !handleConditionallyShowElement({
               formElementsCtrl,
               element,
               errorCallback,
-            ),
+            }),
           }
 
           if (!formElementConditionallyShown.isHidden) {
@@ -209,12 +240,12 @@ const generateFormElementsConditionallyShownWithParent = ({
             ) {
               const newOptions = []
               for (const option of optionsElement.options) {
-                const optionPredicatesResult = handleConditionallyShowOption(
+                const optionPredicatesResult = handleConditionallyShowOption({
                   formElementsCtrl,
-                  optionsElement,
+                  element: optionsElement,
                   option,
                   errorCallback,
-                )
+                })
                 switch (optionPredicatesResult) {
                   case 'SHOW': {
                     newOptions.push(option)
@@ -247,14 +278,14 @@ const generateFormElementsConditionallyShownWithParent = ({
 }
 
 /**
- * Given a form element and submission data, evaluate which elements are
- * currently shown. The function also takes an optional errorCallback for
- * handling errors caught during the evaluation.
+ * Given form elements and submission data, evaluate which elements are
+ * currently shown and whether submission is enabled. The function also takes an
+ * optional errorCallback for handling errors caught during the evaluation.
  *
  * #### Example
  *
  * ```js
- * const formElementsConditionallyShown =
+ * const { formElementsConditionallyShown, isSubmissionEnabled } =
  *   conditionalLogicService.generateFormElementsConditionallyShown({
  *     submission: {
  *       radio: ['hide'],
@@ -307,7 +338,6 @@ const generateFormElementsConditionallyShownWithParent = ({
  *         isElementLookup: false,
  *       },
  *     ],
- *     parentFormElementsCtrl: undefined,
  *     errorCallback: (error) => {
  *       //do something with the error here
  *       console.error(error)
@@ -319,22 +349,79 @@ const generateFormElementsConditionallyShownWithParent = ({
  *
  * ```json
  * {
- *   "radio": {
- *     "isHidden": false,
- *     "type": "formElement"
+ *   "formElementsConditionallyShown": {
+ *     "radio": {
+ *       "isHidden": false,
+ *       "type": "formElement"
+ *     },
+ *     "text": {
+ *       "isHidden": true,
+ *       "type": "formElement"
+ *     }
  *   },
- *   "text": {
- *     "isHidden": true,
- *     "type": "formElement"
- *   }
+ *   "isSubmissionEnabled": true
  * }
  * ```
  *
  * @param parameters
  * @returns
  */
-export function generateFormElementsConditionallyShown(
-  parameters: FormElementsConditionallyShownParameters,
-): FormElementsConditionallyShown {
-  return generateFormElementsConditionallyShownWithParent(parameters)
+export function generateFormElementsConditionallyShown({
+  formElements,
+  submission,
+  errorCallback,
+  enableSubmission,
+}: FormElementsConditionallyShownParameters): FormElementsConditionallyShownResult {
+  const formElementsConditionallyShown =
+    generateFormElementsConditionallyShownWithParent({
+      formElements,
+      submission,
+      errorCallback,
+      parentFormElementsCtrl: undefined,
+    })
+
+  if (!enableSubmission?.conditionalPredicates.length) {
+    return {
+      formElementsConditionallyShown,
+      isSubmissionEnabled: true,
+    }
+  }
+
+  const formElementsCtrl: FormElementsCtrl = {
+    flattenedElements: flattenFormElements(formElements),
+    model: submission,
+  }
+
+  const predicateFn = (
+    predicate: NonNullable<
+      FormTypes.Form['enableSubmission']
+    >['conditionalPredicates'][number],
+  ) => {
+    try {
+      const predicateElement = evaluateFormElementConditionalPredicate({
+        predicate,
+        formElementsCtrl,
+      })
+      if (!predicateElement) {
+        return false
+      }
+
+      // Reuse visibility already computed above instead of re-evaluating
+      // conditionally show predicates for the predicate element / parents.
+      const shown = formElementsConditionallyShown[predicateElement.name]
+      return !!shown && !shown.isHidden
+    } catch (error) {
+      errorCallback?.(error as Error)
+      return false
+    }
+  }
+
+  const isSubmissionEnabled = enableSubmission.requiresAllConditionalPredicates
+    ? enableSubmission.conditionalPredicates.every(predicateFn)
+    : enableSubmission.conditionalPredicates.some(predicateFn)
+
+  return {
+    formElementsConditionallyShown,
+    isSubmissionEnabled,
+  }
 }

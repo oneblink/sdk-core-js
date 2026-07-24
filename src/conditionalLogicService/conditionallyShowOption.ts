@@ -10,11 +10,15 @@ export type ShouldShowOption =
   | 'LOADING_DYNAMIC_DEPENDENCY'
   | 'LOADING_STATIC_DEPENDENCY'
 
-const handleAttributePredicate = (
-  predicate: FormTypes.ChoiceElementOptionAttribute,
-  model: SubmissionTypes.S3SubmissionData['submission'] | undefined,
-  predicateElement: FormTypes.FormElementWithOptions,
-) => {
+const handleAttributePredicate = ({
+  predicate,
+  model,
+  predicateElement,
+}: {
+  predicate: FormTypes.ChoiceElementOptionAttribute
+  model: SubmissionTypes.S3SubmissionData['submission'] | undefined
+  predicateElement: FormTypes.FormElementWithOptions
+}) => {
   const values = model?.[predicateElement.name]
   if (!values) return true
 
@@ -37,11 +41,15 @@ const handleAttributePredicate = (
   })
 }
 
-const conditionallyShowOptionByPredicate = (
-  formElementsCtrl: FormElementsCtrl,
-  predicate: FormTypes.ChoiceElementOptionAttribute,
-  elementsEvaluated: string[],
-): ShouldShowOption => {
+const conditionallyShowOptionByPredicate = ({
+  formElementsCtrl,
+  predicate,
+  elementsEvaluated,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  predicate: FormTypes.ChoiceElementOptionAttribute
+  elementsEvaluated: string[]
+}): ShouldShowOption => {
   // Validate the predicate data, if it is invalid,
   // we will always show the field
   if (
@@ -64,11 +72,11 @@ const conditionallyShowOptionByPredicate = (
   // in a parent list of elements.
   if (!predicateElement) {
     if (formElementsCtrl.parentFormElementsCtrl) {
-      return conditionallyShowOptionByPredicate(
-        formElementsCtrl.parentFormElementsCtrl,
+      return conditionallyShowOptionByPredicate({
+        formElementsCtrl: formElementsCtrl.parentFormElementsCtrl,
         predicate,
         elementsEvaluated,
-      )
+      })
     } else {
       return 'HIDE'
     }
@@ -100,12 +108,15 @@ const conditionallyShowOptionByPredicate = (
     )
     if (!predicateOption) return 'HIDE'
 
-    return conditionallyShowOption(
-      { model: formElementsCtrl.model, flattenedElements: [] },
-      optionsPredicateElement,
-      predicateOption,
-      elementsEvaluated,
-    )
+    return conditionallyShowOption({
+      formElementsCtrl: {
+        model: formElementsCtrl.model,
+        flattenedElements: [],
+      },
+      elementToEvaluate: optionsPredicateElement,
+      optionToEvaluate: predicateOption,
+      optionsEvaluated: elementsEvaluated,
+    })
   })
 
   if (!everyOptionIsShowing) {
@@ -113,19 +124,23 @@ const conditionallyShowOptionByPredicate = (
   }
 
   // Check to see if the model has one of the valid values to show the element
-  const shouldShow = handleAttributePredicate(
+  const shouldShow = handleAttributePredicate({
     predicate,
-    formElementsCtrl.model,
-    optionsPredicateElement,
-  )
+    model: formElementsCtrl.model,
+    predicateElement: optionsPredicateElement,
+  })
   return shouldShow ? 'SHOW' : 'HIDE'
 }
 
-const isAttributeFilterValid = (
-  formElementsCtrl: FormElementsCtrl,
-  predicate: FormTypes.ChoiceElementOptionAttribute,
-  elementsEvaluated: string[],
-): boolean => {
+const isAttributeFilterValid = ({
+  formElementsCtrl,
+  predicate,
+  elementsEvaluated,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  predicate: FormTypes.ChoiceElementOptionAttribute
+  elementsEvaluated: string[]
+}): boolean => {
   const predicateElement = formElementsCtrl.flattenedElements.find(
     (element) => {
       return element.id === predicate.elementId
@@ -138,11 +153,11 @@ const isAttributeFilterValid = (
   // in a parent list of elements.
   if (!predicateElement) {
     if (formElementsCtrl.parentFormElementsCtrl) {
-      return isAttributeFilterValid(
-        formElementsCtrl.parentFormElementsCtrl,
+      return isAttributeFilterValid({
+        formElementsCtrl: formElementsCtrl.parentFormElementsCtrl,
         predicate,
         elementsEvaluated,
-      )
+      })
     } else {
       return false
     }
@@ -154,7 +169,11 @@ const isAttributeFilterValid = (
     // Will never be a page, just making typescript happy :)
     predicateElement.type === 'page' ||
     predicateElement.type === 'section' ||
-    !conditionallyShowElement(formElementsCtrl, predicateElement, [])
+    !conditionallyShowElement({
+      formElementsCtrl,
+      elementToEvaluate: predicateElement,
+      elementsEvaluated: [],
+    })
   ) {
     return false
   }
@@ -174,12 +193,17 @@ const isAttributeFilterValid = (
   return true
 }
 
-export default function conditionallyShowOption(
-  formElementsCtrl: FormElementsCtrl,
-  elementToEvaluate: FormTypes.FormElementWithOptions,
-  optionToEvaluate: FormTypes.ChoiceElementOption,
-  optionsEvaluated: string[],
-): ShouldShowOption {
+export default function conditionallyShowOption({
+  formElementsCtrl,
+  elementToEvaluate,
+  optionToEvaluate,
+  optionsEvaluated,
+}: {
+  formElementsCtrl: FormElementsCtrl
+  elementToEvaluate: FormTypes.FormElementWithOptions
+  optionToEvaluate: FormTypes.ChoiceElementOption
+  optionsEvaluated: string[]
+}): ShouldShowOption {
   // If the element does not have the `conditionallyShow` flag set,
   // we can always show the option.
 
@@ -204,11 +228,11 @@ export default function conditionallyShowOption(
   }
   const validPredicates = (optionToEvaluate.attributes || []).filter(
     (predicate) => {
-      return isAttributeFilterValid(
+      return isAttributeFilterValid({
         formElementsCtrl,
         predicate,
-        optionsEvaluated,
-      )
+        elementsEvaluated: optionsEvaluated,
+      })
     },
   )
   if (!validPredicates.length) return 'SHOW'
@@ -218,11 +242,11 @@ export default function conditionallyShowOption(
   const showResults = Array(validPredicates.length).fill(false)
   for (let i = 0; i < validPredicates.length; i++) {
     const predicate = validPredicates[i]
-    const predicateResult = conditionallyShowOptionByPredicate(
+    const predicateResult = conditionallyShowOptionByPredicate({
       formElementsCtrl,
       predicate,
-      optionsEvaluated,
-    )
+      elementsEvaluated: optionsEvaluated,
+    })
     switch (predicateResult) {
       case 'SHOW': {
         if (elementToEvaluate.requiresAllConditionallyShowOptionsPredicates) {

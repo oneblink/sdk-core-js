@@ -1,4 +1,4 @@
-import { FormTypes, ConditionTypes, SubmissionTypes } from '@oneblink/types'
+import { ConditionTypes, FormTypes, SubmissionTypes } from '@oneblink/types'
 import { FormElementsCtrl } from './types.js'
 import { typeCastService, formElementsService } from '../index.js'
 import evaluateConditionalOptionsPredicate from './evaluateConditionalOptionsPredicate.js'
@@ -14,7 +14,7 @@ const fnMap = {
   '<': (lhs: number, rhs: number) => lhs < rhs,
 }
 
-function getElementAndValue(
+export function getElementAndValue(
   formElementsCtrl: FormElementsCtrl,
   elementId: string,
 ): { formElementWithName?: FormTypes.FormElementWithName; value?: unknown } {
@@ -39,11 +39,16 @@ function getElementAndValue(
   return {}
 }
 
-export default function evaluateConditionalPredicate({
+/**
+ * Evaluate an element-based conditional predicate. When the predicate is
+ * satisfied, returns the predicate form element so callers can also check
+ * whether that element (and its parents) are themselves shown.
+ */
+export default function evaluateFormElementConditionalPredicate({
   predicate,
   formElementsCtrl,
 }: {
-  predicate: ConditionTypes.ConditionalPredicate
+  predicate: ConditionTypes.FormElementConditionalPredicate
   formElementsCtrl: FormElementsCtrl
 }): FormTypes.FormElementWithName | undefined {
   const { formElementWithName: predicateElement, value: predicateValue } =
@@ -127,17 +132,17 @@ export default function evaluateConditionalPredicate({
       }
 
       for (const entry of repeatableSetValue) {
-        const result = conditionallyShowByPredicate(
-          {
+        const result = conditionallyShowByPredicate({
+          formElementsCtrl: {
             model: entry,
             flattenedElements: formElementsService.flattenFormElements(
               repeatableSetElement.elements,
             ),
             parentFormElementsCtrl: formElementsCtrl,
           },
-          predicate.repeatableSetPredicate,
-          [],
-        )
+          predicate: predicate.repeatableSetPredicate,
+          elementsEvaluated: [],
+        })
 
         if (result) {
           return predicateElement
@@ -158,15 +163,15 @@ export default function evaluateConditionalPredicate({
           | SubmissionTypes.S3SubmissionData['submission']
           | undefined
 
-        const result = conditionallyShowByPredicate(
-          {
+        const result = conditionallyShowByPredicate({
+          formElementsCtrl: {
             model: formModel,
             flattenedElements: flattenFormElements(predicateElement.elements),
             parentFormElementsCtrl: formElementsCtrl,
           },
-          predicate.predicate,
-          [],
-        )
+          predicate: predicate.predicate,
+          elementsEvaluated: [],
+        })
 
         if (result) {
           return predicateElement
@@ -269,7 +274,7 @@ export default function evaluateConditionalPredicate({
       break
     }
     case 'OPTIONS':
-    default: {
+    case undefined: {
       const optionsPredicateElement =
         typeCastService.formElements.toOptionsElement(predicateElement)
       if (!optionsPredicateElement) {

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Support for `SUBMISSION_TIMESTAMP` predicates in `conditionalLogicService.evaluateConditionalPredicates()`. Compare the form submission timestamp to a custom date or date/datetime element, with an optional day offset, using `AFTER`/`BEFORE` (exclusive) or `BETWEEN` (inclusive). Pass required `submissionTimestamp`, `parseDate`, and `addDaysToDate` helpers when evaluating so callers control timezone-aware parsing and calendar arithmetic. Client-side code evaluating during submission should pass `new Date().toISOString()`.
+
+### Changed
+
+- **[BREAKING]** `evaluateConditionalPredicates()` now requires `submissionTimestamp: string`, `parseDate: (value: string) => Date`, and `addDaysToDate: (date: Date, offset: number) => Date`.
+- **[BREAKING]** `paymentService.checkForPaymentEvent()` and `schedulingService.checkForSchedulingEvent()` now take a single options object (`{ definition, submission, submissionTimestamp, parseDate, addDaysToDate }`).
+- **[BREAKING]** `generateFormElementsConditionallyShown()` now returns `{ formElementsConditionallyShown, isSubmissionEnabled }` and accepts optional `enableSubmission`. Form-fill submission enablement is evaluated here (visibility-aware) instead of a separate `evaluateConditionalPredicates()` call.
+
 ## [9.2.2] - 2026-07-09
 
 ### Fixed
