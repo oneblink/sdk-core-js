@@ -117,7 +117,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BEFORE',
       compareWith: 'ELEMENT',
-      formElementId: 'agm-date-id',
+      elementId: 'agm-date-id',
       daysOffset: 30,
     }
 
@@ -149,7 +149,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BEFORE',
       compareWith: 'ELEMENT',
-      formElementId: 'agm-date-id',
+      elementId: 'agm-date-id',
       daysOffset: 30,
     }
 
@@ -257,7 +257,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'AFTER',
       compareWith: 'ELEMENT',
-      formElementId: 'agm-date-id',
+      elementId: 'agm-date-id',
       daysOffset: -14,
     }
 
@@ -353,12 +353,12 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       operator: 'BETWEEN',
       min: {
         compareWith: 'ELEMENT',
-        formElementId: 'agm-date-id',
+        elementId: 'agm-date-id',
         daysOffset: -30,
       },
       max: {
         compareWith: 'ELEMENT',
-        formElementId: 'agm-date-id',
+        elementId: 'agm-date-id',
         daysOffset: -14,
       },
     }
@@ -408,7 +408,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BEFORE',
       compareWith: 'ELEMENT',
-      formElementId: 'agm-date-id',
+      elementId: 'agm-date-id',
     }
 
     expect(
