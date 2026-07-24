@@ -14,7 +14,7 @@ const fnMap = {
   '<': (lhs: number, rhs: number) => lhs < rhs,
 }
 
-function getElementAndValue(
+export function getElementAndValue(
   formElementsCtrl: FormElementsCtrl,
   elementId: string,
 ): { formElementWithName?: FormTypes.FormElementWithName; value?: unknown } {

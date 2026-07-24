@@ -1,26 +1,6 @@
 import { ConditionTypes } from '@oneblink/types'
-import { typeCastService } from '../index.js'
 import { AddOffsetToDate, FormElementsCtrl, ParseDate } from './types.js'
-
-function getElementValue(
-  formElementsCtrl: FormElementsCtrl,
-  elementId: string,
-): string | undefined {
-  const formElement = formElementsCtrl.flattenedElements.find(
-    (element) => element.id === elementId,
-  )
-  if (formElement) {
-    const formElementWithName =
-      typeCastService.formElements.toNamedElement(formElement)
-    if (formElementWithName) {
-      const value = formElementsCtrl.model?.[formElementWithName.name]
-      return typeof value === 'string' && value ? value : undefined
-    }
-  } else if (formElementsCtrl.parentFormElementsCtrl) {
-    return getElementValue(formElementsCtrl.parentFormElementsCtrl, elementId)
-  }
-  return undefined
-}
+import { getElementAndValue } from './evaluateFormElementConditionalPredicate.js'
 
 function resolveDateValue(
   dateValue: ConditionTypes.ConditionalPredicateDateValue,
@@ -31,7 +11,13 @@ function resolveDateValue(
   let dateString: string | undefined
 
   if (dateValue.compareWith === 'ELEMENT') {
-    dateString = getElementValue(formElementsCtrl, dateValue.formElementId)
+    const elementAndValue = getElementAndValue(
+      formElementsCtrl,
+      dateValue.formElementId,
+    )
+    if (typeof elementAndValue.value === 'string' && elementAndValue.value) {
+      dateString = elementAndValue.value
+    }
     if (!dateString) {
       return undefined
     }
