@@ -71,38 +71,47 @@ export default function evaluateConditionalSubmissionTimestampPredicate({
 
   const submissionTime = submissionDate.getTime()
 
-  if (predicate.operator === 'BETWEEN') {
-    const min = resolveDateValue(
-      predicate.min,
-      formElementsCtrl,
-      parseDate,
-      addDaysToDate,
-    )
-    const max = resolveDateValue(
-      predicate.max,
-      formElementsCtrl,
-      parseDate,
-      addDaysToDate,
-    )
-    if (!min || !max) {
-      return false
+  switch (predicate.operator) {
+    case 'BETWEEN': {
+      const min = resolveDateValue(
+        predicate.min,
+        formElementsCtrl,
+        parseDate,
+        addDaysToDate,
+      )
+      const max = resolveDateValue(
+        predicate.max,
+        formElementsCtrl,
+        parseDate,
+        addDaysToDate,
+      )
+      if (!min || !max) {
+        return false
+      }
+      return submissionTime >= min.getTime() && submissionTime <= max.getTime()
     }
-    return submissionTime >= min.getTime() && submissionTime <= max.getTime()
-  }
+    default: {
+      const compareDate = resolveDateValue(
+        predicate,
+        formElementsCtrl,
+        parseDate,
+        addDaysToDate,
+      )
+      if (!compareDate) {
+        return false
+      }
 
-  const compareDate = resolveDateValue(
-    predicate,
-    formElementsCtrl,
-    parseDate,
-    addDaysToDate,
-  )
-  if (!compareDate) {
-    return false
+      switch (predicate.operator) {
+        case 'AFTER':
+          return submissionTime > compareDate.getTime()
+        case 'BEFORE':
+          return submissionTime < compareDate.getTime()
+        default: {
+          const n: never = predicate
+          console.warn('Unhandled predicate operator', n)
+          return false
+        }
+      }
+    }
   }
-
-  if (predicate.operator === 'AFTER') {
-    return submissionTime > compareDate.getTime()
-  }
-
-  return submissionTime < compareDate.getTime()
 }
