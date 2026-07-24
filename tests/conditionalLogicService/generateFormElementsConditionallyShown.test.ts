@@ -65,8 +65,9 @@ describe('generateFormElementsConditionallyShown', () => {
   test('Dependant option element will evaluate options as "loading" when waiting for dynamic option dependencies to load and dependency has option selected', () => {
     const result = generateFormElementsConditionallyShown({
       formElements: [dynamicOptionsElement, dependantOptionsElement],
-      submission: { dynamic: 'option1' }
-  })
+      submission: { dynamic: 'option1' },
+      enableSubmission: undefined,
+    })
     expect(
       result.formElementsConditionallyShown.dependant?.type === 'formElement' &&
         result.formElementsConditionallyShown.dependant?.dependencyIsLoading,
@@ -76,12 +77,15 @@ describe('generateFormElementsConditionallyShown', () => {
   test('Dependant option element will evaluate options as "show" when dynamic option dependencies have not loaded but nothing selected in dependency', () => {
     const result = generateFormElementsConditionallyShown({
       formElements: [dynamicOptionsElement, dependantOptionsElement],
-      submission: {}
-  })
+      submission: {},
+      enableSubmission: undefined,
+    })
     expect(
       result.formElementsConditionallyShown.dependant?.type === 'formElement' &&
-        result.formElementsConditionallyShown.dependant?.options?.length === 2 &&
-        result.formElementsConditionallyShown.dependant?.dependencyIsLoading === undefined,
+        result.formElementsConditionallyShown.dependant?.options?.length ===
+          2 &&
+        result.formElementsConditionallyShown.dependant?.dependencyIsLoading ===
+          undefined,
     ).toBe(true)
   })
 
@@ -154,8 +158,9 @@ describe('generateFormElementsConditionallyShown', () => {
       ],
       submission: {
         rs: [{ switch_one: true, switch_two: true }],
-      }
-  })
+      },
+      enableSubmission: undefined,
+    })
     expect(result.formElementsConditionallyShown).toEqual({
       rs: {
         type: 'repeatableSet',
@@ -177,6 +182,285 @@ describe('generateFormElementsConditionallyShown', () => {
         type: 'formElement',
         isHidden: false,
       },
+    })
+  })
+
+  test('enables submission based on a nested form element predicate', () => {
+    const nestedTextElement: FormElement = {
+      id: 'nested-text-id',
+      name: 'nested_text',
+      label: 'Nested Text',
+      type: 'text',
+      required: false,
+      conditionallyShow: false,
+      readOnly: false,
+      isDataLookup: false,
+      isElementLookup: false,
+    }
+    const nestedFormElement: FormElement = {
+      id: 'nested-form-id',
+      name: 'nested_form',
+      type: 'form',
+      formId: 1,
+      conditionallyShow: false,
+      elements: [nestedTextElement],
+    }
+
+    const enabledResult = generateFormElementsConditionallyShown({
+      formElements: [nestedFormElement],
+      submission: {
+        nested_form: {
+          nested_text: 'ready',
+        },
+      },
+      enableSubmission: {
+        requiresAllConditionalPredicates: true,
+        conditionalPredicates: [
+          {
+            elementId: 'nested-form-id',
+            type: 'FORM',
+            predicate: {
+              elementId: 'nested-text-id',
+              type: 'VALUE',
+              hasValue: true,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(enabledResult.isSubmissionEnabled).toBe(true)
+    expect(enabledResult.formElementsConditionallyShown.nested_form).toEqual({
+      type: 'formElements',
+      isHidden: false,
+      formElements: {
+        nested_text: {
+          type: 'formElement',
+          isHidden: false,
+        },
+      },
+    })
+
+    const disabledResult = generateFormElementsConditionallyShown({
+      formElements: [nestedFormElement],
+      submission: {
+        nested_form: {},
+      },
+      enableSubmission: {
+        requiresAllConditionalPredicates: true,
+        conditionalPredicates: [
+          {
+            elementId: 'nested-form-id',
+            type: 'FORM',
+            predicate: {
+              elementId: 'nested-text-id',
+              type: 'VALUE',
+              hasValue: true,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(disabledResult.isSubmissionEnabled).toBe(false)
+  })
+
+  test('enables submission based on a repeatable set element predicate', () => {
+    const nestedTextElement: FormElement = {
+      id: 'rs-text-id',
+      name: 'rs_text',
+      label: 'Repeatable Set Text',
+      type: 'text',
+      required: false,
+      conditionallyShow: false,
+      readOnly: false,
+      isDataLookup: false,
+      isElementLookup: false,
+    }
+    const repeatableSetElement: FormElement = {
+      id: 'repeatable-set-id',
+      name: 'repeatable_set',
+      label: 'Repeatable Set',
+      type: 'repeatableSet',
+      conditionallyShow: false,
+      readOnly: false,
+      elements: [nestedTextElement],
+    }
+
+    const enabledResult = generateFormElementsConditionallyShown({
+      formElements: [repeatableSetElement],
+      submission: {
+        repeatable_set: [{ rs_text: 'ready' }],
+      },
+      enableSubmission: {
+        requiresAllConditionalPredicates: true,
+        conditionalPredicates: [
+          {
+            elementId: 'repeatable-set-id',
+            type: 'REPEATABLESET',
+            repeatableSetPredicate: {
+              elementId: 'rs-text-id',
+              type: 'VALUE',
+              hasValue: true,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(enabledResult.isSubmissionEnabled).toBe(true)
+    expect(enabledResult.formElementsConditionallyShown.repeatable_set).toEqual(
+      {
+        type: 'repeatableSet',
+        isHidden: false,
+        entries: {
+          '0': {
+            rs_text: {
+              type: 'formElement',
+              isHidden: false,
+            },
+          },
+        },
+      },
+    )
+
+    const disabledResult = generateFormElementsConditionallyShown({
+      formElements: [repeatableSetElement],
+      submission: {
+        repeatable_set: [{}],
+      },
+      enableSubmission: {
+        requiresAllConditionalPredicates: true,
+        conditionalPredicates: [
+          {
+            elementId: 'repeatable-set-id',
+            type: 'REPEATABLESET',
+            repeatableSetPredicate: {
+              elementId: 'rs-text-id',
+              type: 'VALUE',
+              hasValue: true,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(disabledResult.isSubmissionEnabled).toBe(false)
+  })
+
+  test('enables submission based on an element nested in pages and sections', () => {
+    const showPageElement: FormElement = {
+      id: 'show-page-id',
+      name: 'show_page',
+      label: 'Show Page',
+      type: 'boolean',
+      required: false,
+      conditionallyShow: false,
+      readOnly: false,
+      isDataLookup: false,
+      isElementLookup: false,
+      defaultValue: false,
+    }
+    const nestedTextElement: FormElement = {
+      id: 'page-section-text-id',
+      name: 'page_section_text',
+      label: 'Page Section Text',
+      type: 'text',
+      required: false,
+      conditionallyShow: false,
+      readOnly: false,
+      isDataLookup: false,
+      isElementLookup: false,
+    }
+    const sectionElement: FormElement = {
+      id: 'section-id',
+      type: 'section',
+      label: 'Section',
+      conditionallyShow: false,
+      requiresAllConditionallyShowPredicates: false,
+      isCollapsed: false,
+      elements: [nestedTextElement],
+    }
+    const pageElement: FormElement = {
+      id: 'page-id',
+      type: 'page',
+      label: 'Page',
+      conditionallyShow: true,
+      requiresAllConditionallyShowPredicates: false,
+      conditionallyShowPredicates: [
+        {
+          elementId: 'show-page-id',
+          type: 'VALUE',
+          hasValue: true,
+        },
+      ],
+      elements: [sectionElement],
+    }
+    const formElements = [showPageElement, pageElement]
+    const enableSubmission = {
+      requiresAllConditionalPredicates: true,
+      conditionalPredicates: [
+        {
+          elementId: 'page-section-text-id',
+          type: 'VALUE' as const,
+          hasValue: true,
+        },
+      ],
+    }
+
+    const enabledResult = generateFormElementsConditionallyShown({
+      formElements,
+      submission: {
+        show_page: true,
+        page_section_text: 'ready',
+      },
+      enableSubmission,
+    })
+
+    expect(enabledResult.isSubmissionEnabled).toBe(true)
+    expect(enabledResult.formElementsConditionallyShown).toEqual({
+      show_page: {
+        type: 'formElement',
+        isHidden: false,
+      },
+      'page-id': {
+        type: 'formElement',
+        isHidden: false,
+      },
+      'section-id': {
+        type: 'formElement',
+        isHidden: false,
+      },
+      page_section_text: {
+        type: 'formElement',
+        isHidden: false,
+      },
+    })
+
+    const emptyValueResult = generateFormElementsConditionallyShown({
+      formElements,
+      submission: {
+        show_page: true,
+      },
+      enableSubmission,
+    })
+
+    expect(emptyValueResult.isSubmissionEnabled).toBe(false)
+
+    const hiddenByPageResult = generateFormElementsConditionallyShown({
+      formElements,
+      submission: {
+        page_section_text: 'ready',
+      },
+      enableSubmission,
+    })
+
+    expect(hiddenByPageResult.isSubmissionEnabled).toBe(false)
+    expect(
+      hiddenByPageResult.formElementsConditionallyShown.page_section_text,
+    ).toEqual({
+      type: 'formElement',
+      isHidden: true,
     })
   })
 })
