@@ -13,7 +13,7 @@ function resolveDateValue(
   if (dateValue.compareWith === 'ELEMENT') {
     const elementAndValue = getElementAndValue(
       formElementsCtrl,
-      dateValue.formElementId,
+      dateValue.elementId,
     )
     if (typeof elementAndValue.value === 'string' && elementAndValue.value) {
       dateString = elementAndValue.value
