@@ -1113,6 +1113,42 @@ export function processInjectablesInCustomResource<T>({
   return newResources
 }
 
+/**
+ * Creates a `morph-expressions` {@link PropertyHandler} that resolves a
+ * (potentially nested) element reference within a submission down to a single
+ * numeric value, so it can be used as a variable when evaluating calculation
+ * expressions.
+ *
+ * The handler walks the `nestedElementNames` path (e.g.
+ * `['repeatableSet', 'nestedForm', 'number']`), starting from the top level of
+ * the submission and reducing one element name at a time. At each step it
+ * coerces the current value to a number the calculation can use:
+ *
+ * - **Numbers** are returned as-is.
+ * - **Strings** are first parsed as dates via `generateDateFn` (returning the
+ *   epoch time for `date`, `datetime` and `time` elements) and otherwise parsed
+ *   with `parseFloat`.
+ * - **Arrays** are treated as either multi-value elements (e.g. checkboxes),
+ *   whose entries are summed, or as repeatable set entries, whose relevant
+ *   nested element values are gathered/summed and passed to the next iteration.
+ *   Empty arrays resolve to `NaN` to short-circuit the calculation.
+ * - **Objects** are traversed into using the next element name when the current
+ *   element is a nested `form` element, and the `value` property is read for
+ *   `compliance` elements.
+ *
+ * When no numeric value can be resolved the handler returns `NaN`, which the
+ * downstream calculation treats as an invalid/empty input.
+ *
+ * @param options.formElements The form's element definitions, used to detect
+ *   nested `form` elements while traversing the path.
+ * @param options.nestedElementNames The ordered path of element names to
+ *   resolve, from the root submission down to the target value.
+ * @param options.generateDateFn Function used to parse a string into a `Date`
+ *   (with an optional day offset), returning `undefined` when the string is not
+ *   a recognised date.
+ * @returns A property handler that, given a submission, returns the resolved
+ *   numeric value (or `NaN` when it cannot be determined).
+ */
 export function generateMorphExpressionPropertyHandler({
   formElements,
   nestedElementNames,
@@ -1157,13 +1193,6 @@ export function generateMorphExpressionPropertyHandler({
           })
           if (parsedIsoDate) {
             return parsedIsoDate.getTime()
-          }
-          const parsedDate = generateDateFn({
-            value: elementValue,
-            daysOffset: undefined,
-          })
-          if (parsedDate) {
-            return parsedDate.getTime()
           }
 
           return parseFloat(elementValue)
