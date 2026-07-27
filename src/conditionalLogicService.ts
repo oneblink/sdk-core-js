@@ -2,10 +2,20 @@ import evaluateFormElementConditionalPredicate from './conditionalLogicService/e
 import evaluateConditionalSubmissionTimestampPredicate from './conditionalLogicService/evaluateConditionalSubmissionTimestampPredicate.js'
 import { flattenFormElements } from './formElementsService.js'
 import { ConditionTypes, FormTypes, SubmissionTypes } from '@oneblink/types'
-import { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
+import {
+  AddOffsetToDate,
+  EndOfDay,
+  ParseDayOnlyDate,
+  StartOfDay,
+} from './conditionalLogicService/types.js'
 
 export * from './conditionalLogicService/generateFormElementsConditionallyShown.js'
-export type { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
+export type {
+  AddOffsetToDate,
+  EndOfDay,
+  ParseDayOnlyDate,
+  StartOfDay,
+} from './conditionalLogicService/types.js'
 
 /**
  * Given a set of form elements and submission data, evaluate if predicates are
@@ -63,9 +73,17 @@ export type { AddOffsetToDate, ParseDate } from './conditionalLogicService/types
  *       },
  *     ],
  *     submissionTimestamp: new Date().toISOString(),
- *     parseDate: (value) => new Date(value),
+ *     parseDayOnlyDate: (value) => new Date(`${value}T00:00:00.000Z`),
  *     addDaysToDate: (date, days) => {
  *       date.setUTCDate(date.getUTCDate() + days)
+ *       return date
+ *     },
+ *     startOfDay: (date) => {
+ *       date.setUTCHours(0, 0, 0, 0)
+ *       return date
+ *     },
+ *     endOfDay: (date) => {
+ *       date.setUTCHours(23, 59, 59, 999)
  *       return date
  *     },
  *   },
@@ -82,8 +100,10 @@ export function evaluateConditionalPredicates({
   formElements,
   submission,
   submissionTimestamp,
-  parseDate,
+  parseDayOnlyDate,
   addDaysToDate,
+  startOfDay,
+  endOfDay,
 }: {
   isConditional: boolean
   requiresAllConditionalPredicates: boolean
@@ -92,10 +112,14 @@ export function evaluateConditionalPredicates({
   submission: SubmissionTypes.S3SubmissionData['submission']
   /** ISO timestamp the form was submitted. When evaluating during submission, pass `new Date().toISOString()`. */
   submissionTimestamp: string
-  /** Parse date/datetime strings when evaluating date based predicates */
-  parseDate: ParseDate
+  /** Parse `YYYY-MM-DD` strings when evaluating date based predicates */
+  parseDayOnlyDate: ParseDayOnlyDate
   /** Add days to a date when evaluating date based predicates */
   addDaysToDate: AddOffsetToDate
+  /** Start of calendar day when evaluating date (not datetime) based predicates */
+  startOfDay: StartOfDay
+  /** End of calendar day when evaluating date (not datetime) based predicates */
+  endOfDay: EndOfDay
 }): boolean {
   if (!isConditional || !conditionalPredicates.length) {
     return true
@@ -111,8 +135,10 @@ export function evaluateConditionalPredicates({
         predicate,
         formElementsCtrl,
         submissionTimestamp,
-        parseDate,
+        parseDayOnlyDate,
         addDaysToDate,
+        startOfDay,
+        endOfDay,
       })
     }
 

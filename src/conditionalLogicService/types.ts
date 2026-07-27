@@ -1,16 +1,30 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 
 /**
- * Parse a date/datetime string into a `Date`. Callers supply timezone-aware
- * parsing (e.g. treating `YYYY-MM-DD` as the start of day in an organisation
- * timezone).
+ * Parse a day-only (`YYYY-MM-DD`) string into a `Date`. Callers supply
+ * timezone-aware parsing (e.g. start of day in an organisation timezone).
+ * sdk-core only invokes this for values that match `YYYY-MM-DD`.
  */
-export type ParseDate = (value: string) => Date
+export type ParseDayOnlyDate = (value: string) => Date
 
 /**
  * Add an offset to a date. Callers supply timezone-aware calendar arithmetic.
  */
 export type AddOffsetToDate = (date: Date, offset: number) => Date
+
+/**
+ * Move a date to the start of its calendar day. Callers supply timezone-aware
+ * behaviour (e.g. organisation timezone on the server, local timezone in the
+ * browser).
+ */
+export type StartOfDay = (date: Date) => Date
+
+/**
+ * Move a date to the end of its calendar day (last millisecond). Callers supply
+ * timezone-aware behaviour (e.g. organisation timezone on the server, local
+ * timezone in the browser).
+ */
+export type EndOfDay = (date: Date) => Date
 
 export type FormElementsCtrl = {
   model: SubmissionTypes.S3SubmissionData['submission'] | undefined

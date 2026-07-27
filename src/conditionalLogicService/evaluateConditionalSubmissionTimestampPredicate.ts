@@ -1,12 +1,25 @@
 import { ConditionTypes } from '@oneblink/types'
-import { AddOffsetToDate, FormElementsCtrl, ParseDate } from './types.js'
+import {
+  AddOffsetToDate,
+  EndOfDay,
+  FormElementsCtrl,
+  ParseDayOnlyDate,
+  StartOfDay,
+} from './types.js'
 import { getElementAndValue } from './evaluateFormElementConditionalPredicate.js'
+
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+type DayBoundary = 'start' | 'end'
 
 function resolveDateValue(
   dateValue: ConditionTypes.ConditionalPredicateDateValue,
   formElementsCtrl: FormElementsCtrl,
-  parseDate: ParseDate,
+  parseDayOnlyDate: ParseDayOnlyDate,
   addDaysToDate: AddOffsetToDate,
+  startOfDay: StartOfDay,
+  endOfDay: EndOfDay,
+  dayBoundary: DayBoundary,
 ): Date | undefined {
   let dateString: string | undefined
 
@@ -17,27 +30,34 @@ function resolveDateValue(
     )
     if (typeof elementAndValue.value === 'string' && elementAndValue.value) {
       dateString = elementAndValue.value
-    }
-    if (!dateString) {
+    } else {
       return undefined
     }
   } else {
     dateString = dateValue.value
   }
 
-  const date = parseDate(dateString)
+  const isDayOnly = DATE_ONLY_PATTERN.test(dateString)
+  const date = isDayOnly ? parseDayOnlyDate(dateString) : new Date(dateString)
   if (Number.isNaN(date.getTime())) {
     return undefined
   }
 
-  if (
+  const dateWithOffset =
     typeof dateValue.daysOffset !== 'number' ||
     Number.isNaN(dateValue.daysOffset)
-  ) {
-    return date
+      ? date
+      : addDaysToDate(date, dateValue.daysOffset)
+
+  if (isDayOnly) {
+    if (dayBoundary === 'start') {
+      return startOfDay(dateWithOffset)
+    } else {
+      return endOfDay(dateWithOffset)
+    }
   }
 
-  return addDaysToDate(date, dateValue.daysOffset)
+  return dateWithOffset
 }
 
 /**
@@ -48,21 +68,35 @@ function resolveDateValue(
  * - `BEFORE` — submission timestamp is before (exclusive) the comparison date
  * - `BETWEEN` — submission timestamp is between `min` and `max` (inclusive)
  *
- * Date strings are parsed via `parseDate`. Day offsets are applied via
+ * When the comparison value is a day-only (`YYYY-MM-DD`) string, day
+ * boundaries are applied via the injected helpers:
+ *
+ * - `AFTER` — end of the comparison day
+ * - `BEFORE` — start of the comparison day
+ * - `BETWEEN` — start of `min` day through end of `max` day
+ *
+ * Full ISO datetime values compare at the exact instant.
+ *
+ * Day-only (`YYYY-MM-DD`) strings are parsed via `parseDayOnlyDate`. Other
+ * date strings use `new Date(value)`. Day offsets are applied via
  * `addDaysToDate(date, offset)`.
  */
 export default function evaluateConditionalSubmissionTimestampPredicate({
   predicate,
   formElementsCtrl,
   submissionTimestamp,
-  parseDate,
+  parseDayOnlyDate,
   addDaysToDate,
+  startOfDay,
+  endOfDay,
 }: {
   predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp
   formElementsCtrl: FormElementsCtrl
   submissionTimestamp: string
-  parseDate: ParseDate
+  parseDayOnlyDate: ParseDayOnlyDate
   addDaysToDate: AddOffsetToDate
+  startOfDay: StartOfDay
+  endOfDay: EndOfDay
 }): boolean {
   const submissionDate = new Date(submissionTimestamp)
   if (Number.isNaN(submissionDate.getTime())) {
@@ -76,14 +110,20 @@ export default function evaluateConditionalSubmissionTimestampPredicate({
       const min = resolveDateValue(
         predicate.min,
         formElementsCtrl,
-        parseDate,
+        parseDayOnlyDate,
         addDaysToDate,
+        startOfDay,
+        endOfDay,
+        'start',
       )
       const max = resolveDateValue(
         predicate.max,
         formElementsCtrl,
-        parseDate,
+        parseDayOnlyDate,
         addDaysToDate,
+        startOfDay,
+        endOfDay,
+        'end',
       )
       if (!min || !max) {
         return false
@@ -91,11 +131,16 @@ export default function evaluateConditionalSubmissionTimestampPredicate({
       return submissionTime >= min.getTime() && submissionTime <= max.getTime()
     }
     default: {
+      const dayBoundary: DayBoundary =
+        predicate.operator === 'AFTER' ? 'end' : 'start'
       const compareDate = resolveDateValue(
         predicate,
         formElementsCtrl,
-        parseDate,
+        parseDayOnlyDate,
         addDaysToDate,
+        startOfDay,
+        endOfDay,
+        dayBoundary,
       )
       if (!compareDate) {
         return false

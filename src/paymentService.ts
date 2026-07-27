@@ -8,7 +8,12 @@ import {
   getRootElementValueById,
   ReplaceInjectablesFormatters,
 } from './submissionService.js'
-import { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
+import {
+  AddOffsetToDate,
+  EndOfDay,
+  ParseDayOnlyDate,
+  StartOfDay,
+} from './conditionalLogicService/types.js'
 
 /**
  * Examine a submission and its form definition to validate whether a payment
@@ -21,9 +26,17 @@ import { AddOffsetToDate, ParseDate } from './conditionalLogicService/types.js'
  *   definition: form,
  *   submission,
  *   submissionTimestamp,
- *   parseDate: (value) => new Date(value),
+ *   parseDayOnlyDate: (value) => new Date(`${value}T00:00:00.000Z`),
  *   addDaysToDate: (date, days) => {
  *     date.setUTCDate(date.getUTCDate() + days)
+ *     return date
+ *   },
+ *   startOfDay: (date) => {
+ *     date.setUTCHours(0, 0, 0, 0)
+ *     return date
+ *   },
+ *   endOfDay: (date) => {
+ *     date.setUTCHours(23, 59, 59, 999)
  *     return date
  *   },
  * })
@@ -36,17 +49,23 @@ export function checkForPaymentEvent({
   definition,
   submission,
   submissionTimestamp,
-  parseDate,
+  parseDayOnlyDate,
   addDaysToDate,
+  startOfDay,
+  endOfDay,
 }: {
   definition: FormTypes.Form
   submission: SubmissionTypes.S3SubmissionData['submission']
   /** ISO timestamp the form was submitted. When evaluating during submission, pass `new Date().toISOString()`. */
   submissionTimestamp: string
-  /** Parse date/datetime strings when evaluating date based predicates */
-  parseDate: ParseDate
+  /** Parse `YYYY-MM-DD` strings when evaluating date based predicates */
+  parseDayOnlyDate: ParseDayOnlyDate
   /** Add days to a date when evaluating date based predicates */
   addDaysToDate: AddOffsetToDate
+  /** Start of calendar day when evaluating date (not datetime) based predicates */
+  startOfDay: StartOfDay
+  /** End of calendar day when evaluating date (not datetime) based predicates */
+  endOfDay: EndOfDay
 }):
   | {
       paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent
@@ -67,8 +86,10 @@ export function checkForPaymentEvent({
           submission: submission,
           formElements: definition.elements,
           submissionTimestamp,
-          parseDate,
+          parseDayOnlyDate,
           addDaysToDate,
+          startOfDay,
+          endOfDay,
         })
       )
     },

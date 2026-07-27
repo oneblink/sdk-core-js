@@ -3,9 +3,15 @@ import { ConditionTypes, FormTypes } from '@oneblink/types'
 import evaluateConditionalSubmissionTimestampPredicate from '../../src/conditionalLogicService/evaluateConditionalSubmissionTimestampPredicate'
 import { evaluateConditionalPredicates } from '../../src/conditionalLogicService'
 import { flattenFormElements } from '../../src/formElementsService'
-import { AddOffsetToDate, ParseDate } from '../../src/conditionalLogicService/types'
+import {
+  AddOffsetToDate,
+  EndOfDay,
+  ParseDayOnlyDate,
+  StartOfDay,
+} from '../../src/conditionalLogicService/types'
 
-const parseDate: ParseDate = (value) => new Date(value)
+const parseDayOnlyDate: ParseDayOnlyDate = (value) =>
+  new Date(`${value}T00:00:00.000Z`)
 
 const addDaysToDate: AddOffsetToDate = (date, offset) => {
   const result = new Date(date.getTime())
@@ -13,17 +19,41 @@ const addDaysToDate: AddOffsetToDate = (date, offset) => {
   return result
 }
 
+const startOfDay: StartOfDay = (date) => {
+  const result = new Date(date.getTime())
+  result.setUTCHours(0, 0, 0, 0)
+  return result
+}
 
-/**
- * Treat `YYYY-MM-DD` as the start of day in America/New_York; otherwise parse
- * as an absolute instant.
- */
-const parseDateInNewYork: ParseDate = (value) => {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    // EDT (UTC-4) for July test dates
-    return new Date(`${value}T04:00:00.000Z`)
-  }
-  return new Date(value)
+const endOfDay: EndOfDay = (date) => {
+  const result = new Date(date.getTime())
+  result.setUTCHours(23, 59, 59, 999)
+  return result
+}
+
+/** Treat `YYYY-MM-DD` as the start of day in America/New_York (EDT for July). */
+const parseDayOnlyDateInNewYork: ParseDayOnlyDate = (value) =>
+  new Date(`${value}T04:00:00.000Z`)
+
+/** NY midnight is already encoded by `parseDayOnlyDateInNewYork` for July dates. */
+const startOfDayInNewYork: StartOfDay = (date) => new Date(date.getTime())
+
+/** End of NY day for July (EDT) test dates: start + 24h - 1ms. */
+const endOfDayInNewYork: EndOfDay = (date) =>
+  new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1)
+
+const dateHelpers = {
+  parseDayOnlyDate,
+  addDaysToDate,
+  startOfDay,
+  endOfDay,
+}
+
+const newYorkDateHelpers = {
+  parseDayOnlyDate: parseDayOnlyDateInNewYork,
+  addDaysToDate,
+  startOfDay: startOfDayInNewYork,
+  endOfDay: endOfDayInNewYork,
 }
 
 describe('evaluateConditionalSubmissionTimestampPredicate', () => {
@@ -40,15 +70,35 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
     isElementLookup: false,
   }
 
+  const datetimeElement: FormTypes.FormElement = {
+    id: 'agm-datetime-id',
+    name: 'agmDateTime',
+    label: 'AGM Date Time',
+    type: 'datetime',
+    required: false,
+    readOnly: false,
+    conditionallyShow: false,
+    requiresAllConditionallyShowPredicates: false,
+    isDataLookup: false,
+    isElementLookup: false,
+  }
+
   const formElementsCtrl = {
     flattenedElements: flattenFormElements([dateElement]),
     model: {
       agmDate: '2026-07-01',
-    }
+    },
   }
 
-  test('BEFORE with custom date and daysOffset (exclusive)', () => {
-    // AGM (2026-07-01) + 30 days = 2026-07-31
+  const datetimeFormElementsCtrl = {
+    flattenedElements: flattenFormElements([datetimeElement]),
+    model: {
+      agmDateTime: '2026-07-01T12:00:00.000Z',
+    },
+  }
+
+  test('BEFORE with custom date and daysOffset uses start of day (exclusive)', () => {
+    // AGM (2026-07-01) + 30 days = 2026-07-31 start of day
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BEFORE',
@@ -62,8 +112,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-30T12:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(true)
 
@@ -72,8 +121,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-31T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
 
@@ -82,8 +130,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-08-01T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
@@ -103,7 +150,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-15T00:00:00.000Z',
-        parseDate,
+        ...dateHelpers,
         addDaysToDate: addDaysToDateSpy,
       }),
     ).toBe(true)
@@ -112,7 +159,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
     expect(addDaysToDateSpy).toHaveBeenCalledWith(expect.any(Date), 0)
   })
 
-  test('BEFORE with date element and daysOffset', () => {
+  test('BEFORE with date element and daysOffset uses start of day', () => {
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BEFORE',
@@ -126,8 +173,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-15T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(true)
 
@@ -136,13 +182,12 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-08-01T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
 
-  test('date element values are parsed via injected parseDate', () => {
+  test('date element values are parsed via injected parseDayOnlyDate with timezone start of day', () => {
     // AGM 2026-07-01 + 30 days = 2026-07-31, parsed as NY start of day
     // = 2026-07-31T04:00:00.000Z
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
@@ -158,8 +203,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-31T03:00:00.000Z',
-        parseDate: parseDateInNewYork,
-      addDaysToDate,
+        ...newYorkDateHelpers,
       }),
     ).toBe(true)
 
@@ -168,8 +212,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-31T04:00:00.000Z',
-        parseDate: parseDateInNewYork,
-      addDaysToDate,
+        ...newYorkDateHelpers,
       }),
     ).toBe(false)
 
@@ -178,66 +221,107 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-31T03:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
 
-  test('AFTER with custom date-only value uses parseDate', () => {
+  test('AFTER with date-only value uses end of day', () => {
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'AFTER',
       compareWith: 'VALUE',
       value: '2026-07-01',
     }
+    const startOfDaySpy = vi.fn(startOfDay)
+    const endOfDaySpy = vi.fn(endOfDay)
 
+    // Still on 2026-07-01 — not after end of day
     expect(
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
-        submissionTimestamp: '2026-07-01T04:00:00.001Z',
-        parseDate: parseDateInNewYork,
-      addDaysToDate,
+        submissionTimestamp: '2026-07-01T12:00:00.000Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(false)
+
+    // Exactly end of day — exclusive, so false
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-01T23:59:59.999Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(false)
+
+    // After end of day
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-02T00:00:00.000Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(true)
 
-    expect(
-      evaluateConditionalSubmissionTimestampPredicate({
-        predicate,
-        formElementsCtrl,
-        submissionTimestamp: '2026-07-01T04:00:00.000Z',
-        parseDate: parseDateInNewYork,
-      addDaysToDate,
-      }),
-    ).toBe(false)
-
-    expect(
-      evaluateConditionalSubmissionTimestampPredicate({
-        predicate,
-        formElementsCtrl,
-        submissionTimestamp: '2026-07-01T03:59:59.999Z',
-        parseDate: parseDateInNewYork,
-      addDaysToDate,
-      }),
-    ).toBe(false)
+    expect(endOfDaySpy).toHaveBeenCalled()
+    expect(startOfDaySpy).not.toHaveBeenCalled()
   })
 
-  test('AFTER with full ISO timestamp', () => {
+  test('AFTER with date element uses end of day in organisation timezone', () => {
+    // 2026-07-01 NY end of day = 2026-07-02T03:59:59.999Z
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'AFTER',
-      compareWith: 'VALUE',
-      value: '2026-07-01T00:00:00.000Z',
+      compareWith: 'ELEMENT',
+      elementId: 'agm-date-id',
     }
 
     expect(
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
+        submissionTimestamp: '2026-07-02T03:59:59.999Z',
+        ...newYorkDateHelpers,
+      }),
+    ).toBe(false)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-02T04:00:00.000Z',
+        ...newYorkDateHelpers,
+      }),
+    ).toBe(true)
+  })
+
+  test('AFTER with full ISO timestamp compares exact instant', () => {
+    const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
+      type: 'SUBMISSION_TIMESTAMP',
+      operator: 'AFTER',
+      compareWith: 'VALUE',
+      value: '2026-07-01T00:00:00.000Z',
+    }
+    const parseDayOnlyDateSpy = vi.fn(parseDayOnlyDate)
+    const endOfDaySpy = vi.fn(endOfDay)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
         submissionTimestamp: '2026-07-01T00:00:00.001Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
+        parseDayOnlyDate: parseDayOnlyDateSpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(true)
 
@@ -246,13 +330,50 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-01T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
+        parseDayOnlyDate: parseDayOnlyDateSpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(false)
+
+    expect(parseDayOnlyDateSpy).not.toHaveBeenCalled()
+    expect(endOfDaySpy).not.toHaveBeenCalled()
   })
 
-  test('AFTER with negative daysOffset', () => {
+  test('AFTER with datetime element compares exact instant', () => {
+    const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
+      type: 'SUBMISSION_TIMESTAMP',
+      operator: 'AFTER',
+      compareWith: 'ELEMENT',
+      elementId: 'agm-datetime-id',
+    }
+    const endOfDaySpy = vi.fn(endOfDay)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl: datetimeFormElementsCtrl,
+        submissionTimestamp: '2026-07-01T12:00:00.001Z',
+        ...dateHelpers,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(true)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl: datetimeFormElementsCtrl,
+        submissionTimestamp: '2026-07-01T12:00:00.000Z',
+        ...dateHelpers,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(false)
+
+    expect(endOfDaySpy).not.toHaveBeenCalled()
+  })
+
+  test('AFTER with negative daysOffset uses end of day for date element', () => {
+    // 2026-07-01 - 14 days = 2026-06-17 end of day
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'AFTER',
@@ -265,9 +386,45 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
+        submissionTimestamp: '2026-06-17T12:00:00.000Z',
+        ...dateHelpers,
+      }),
+    ).toBe(false)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
         submissionTimestamp: '2026-06-18T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
+      }),
+    ).toBe(true)
+  })
+
+  test('BETWEEN inclusive uses start of min day and end of max day for date-only values', () => {
+    const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
+      type: 'SUBMISSION_TIMESTAMP',
+      operator: 'BETWEEN',
+      min: {
+        compareWith: 'VALUE',
+        value: '2026-07-01',
+      },
+      max: {
+        compareWith: 'VALUE',
+        value: '2026-07-31',
+      },
+    }
+    const startOfDaySpy = vi.fn(startOfDay)
+    const endOfDaySpy = vi.fn(endOfDay)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-01T00:00:00.000Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(true)
 
@@ -275,14 +432,51 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
-        submissionTimestamp: '2026-06-17T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        submissionTimestamp: '2026-07-15T12:00:00.000Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(true)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-07-31T23:59:59.999Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(true)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-06-30T23:59:59.999Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(false)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-08-01T00:00:00.000Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
+      }),
+    ).toBe(false)
+
+    expect(startOfDaySpy).toHaveBeenCalled()
+    expect(endOfDaySpy).toHaveBeenCalled()
   })
 
-  test('BETWEEN inclusive with custom dates', () => {
+  test('BETWEEN with datetime ISO bounds compares exact instants', () => {
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BETWEEN',
@@ -295,34 +489,17 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         value: '2026-07-31T00:00:00.000Z',
       },
     }
-
-    expect(
-      evaluateConditionalSubmissionTimestampPredicate({
-        predicate,
-        formElementsCtrl,
-        submissionTimestamp: '2026-07-01T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
-      }),
-    ).toBe(true)
-
-    expect(
-      evaluateConditionalSubmissionTimestampPredicate({
-        predicate,
-        formElementsCtrl,
-        submissionTimestamp: '2026-07-15T12:00:00.000Z',
-        parseDate,
-        addDaysToDate,
-      }),
-    ).toBe(true)
+    const startOfDaySpy = vi.fn(startOfDay)
+    const endOfDaySpy = vi.fn(endOfDay)
 
     expect(
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-07-31T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(true)
 
@@ -330,24 +507,20 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
-        submissionTimestamp: '2026-06-30T23:59:59.999Z',
-        parseDate,
-        addDaysToDate,
+        submissionTimestamp: '2026-07-31T00:00:00.001Z',
+        ...dateHelpers,
+        startOfDay: startOfDaySpy,
+        endOfDay: endOfDaySpy,
       }),
     ).toBe(false)
 
-    expect(
-      evaluateConditionalSubmissionTimestampPredicate({
-        predicate,
-        formElementsCtrl,
-        submissionTimestamp: '2026-07-31T00:00:00.001Z',
-        parseDate,
-        addDaysToDate,
-      }),
-    ).toBe(false)
+    expect(startOfDaySpy).not.toHaveBeenCalled()
+    expect(endOfDaySpy).not.toHaveBeenCalled()
   })
 
-  test('BETWEEN with element and daysOffset', () => {
+  test('BETWEEN with element and daysOffset uses day boundaries', () => {
+    // min: 2026-07-01 - 30 = 2026-06-01 start
+    // max: 2026-07-01 - 14 = 2026-06-17 end
     const predicate: ConditionTypes.ConditionalPredicateSubmissionTimestamp = {
       type: 'SUBMISSION_TIMESTAMP',
       operator: 'BETWEEN',
@@ -368,8 +541,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: '2026-06-10T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(true)
 
@@ -377,9 +549,26 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
       evaluateConditionalSubmissionTimestampPredicate({
         predicate,
         formElementsCtrl,
+        submissionTimestamp: '2026-06-17T23:59:59.999Z',
+        ...dateHelpers,
+      }),
+    ).toBe(true)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
+        submissionTimestamp: '2026-06-18T00:00:00.000Z',
+        ...dateHelpers,
+      }),
+    ).toBe(false)
+
+    expect(
+      evaluateConditionalSubmissionTimestampPredicate({
+        predicate,
+        formElementsCtrl,
         submissionTimestamp: '2026-05-31T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
@@ -397,8 +586,7 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl,
         submissionTimestamp: 'not-a-date',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
@@ -416,11 +604,10 @@ describe('evaluateConditionalSubmissionTimestampPredicate', () => {
         predicate,
         formElementsCtrl: {
           flattenedElements: flattenFormElements([dateElement]),
-          model: {}
+          model: {},
         },
         submissionTimestamp: '2026-07-15T00:00:00.000Z',
-        parseDate,
-        addDaysToDate,
+        ...dateHelpers,
       }),
     ).toBe(false)
   })
@@ -443,8 +630,7 @@ describe('evaluateConditionalPredicates SUBMISSION_TIMESTAMP', () => {
       formElements: [],
       submission: {},
       submissionTimestamp: '2026-07-15T00:00:00.000Z',
-      parseDate,
-      addDaysToDate,
+      ...dateHelpers,
     })
     expect(result).toBe(true)
   })
@@ -464,8 +650,7 @@ describe('evaluateConditionalPredicates SUBMISSION_TIMESTAMP', () => {
       formElements: [],
       submission: {},
       submissionTimestamp: 'not-a-date',
-      parseDate,
-      addDaysToDate,
+      ...dateHelpers,
     })
     expect(result).toBe(false)
   })
