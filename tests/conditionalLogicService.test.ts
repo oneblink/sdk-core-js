@@ -587,13 +587,6 @@ describe('generateFormElementsConditionallyShown', () => {
           ],
         },
       ],
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
-    
     })
     expect(result.formElementsConditionallyShown).toEqual({
       comparisonNumber: {
@@ -775,13 +768,6 @@ describe('generateFormElementsConditionallyShown', () => {
         },
       ],
       errorCallback,
-      parseDate: (value) => new Date(value),
-      addDaysToDate: (date, days) => {
-        const result = new Date(date.getTime())
-        result.setUTCDate(result.getUTCDate() + days)
-        return result
-      },
-    
     })
     expect(result.formElementsConditionallyShown).toEqual({
       first_option: {

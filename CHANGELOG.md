@@ -9,12 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Support for `SUBMISSION_TIMESTAMP` predicates in `conditionalLogicService.evaluateConditionalPredicates()`. Compare the form submission timestamp to a custom date or date/datetime element, with an optional day offset, using `AFTER`/`BEFORE` (exclusive) or `BETWEEN` (inclusive). Pass required `submissionTimestamp`, `parseDate`, and `addDaysToDate` helpers when evaluating so callers control timezone-aware parsing and calendar arithmetic. Client-side code evaluating during submission should pass `new Date().toISOString()`.
+- Support for `SUBMISSION_TIMESTAMP` predicates in `conditionalLogicService.evaluateConditionalPredicates()`. Compare the form submission timestamp to a custom date or date/datetime element, with an optional day offset, using `AFTER`/`BEFORE` (exclusive) or `BETWEEN` (inclusive). Pass required `submissionTimestamp`, `parseDayOnlyDate`, `addDaysToDate`, `startOfDay`, and `endOfDay` helpers when evaluating so callers control timezone-aware calendar arithmetic. sdk-core only calls `parseDayOnlyDate` for `YYYY-MM-DD` values; other date strings use `new Date(value)`. Client-side code evaluating during submission should pass `new Date().toISOString()`.
+- For day-only (`YYYY-MM-DD`) comparison values, day boundaries are applied: `AFTER` uses end of day, `BEFORE` uses start of day, and `BETWEEN` uses start of `min` through end of `max`. Full ISO datetime values compare at the exact instant.
 
 ### Changed
 
-- **[BREAKING]** `evaluateConditionalPredicates()` now requires `submissionTimestamp: string`, `parseDate: (value: string) => Date`, and `addDaysToDate: (date: Date, offset: number) => Date`.
-- **[BREAKING]** `paymentService.checkForPaymentEvent()` and `schedulingService.checkForSchedulingEvent()` now take a single options object (`{ definition, submission, submissionTimestamp, parseDate, addDaysToDate }`).
+- **[BREAKING]** `evaluateConditionalPredicates()` now requires `submissionTimestamp: string`, `parseDayOnlyDate: (value: string) => Date`, `addDaysToDate: (date: Date, offset: number) => Date`, `startOfDay: (date: Date) => Date`, and `endOfDay: (date: Date) => Date`.
+- **[BREAKING]** `paymentService.checkForPaymentEvent()` and `schedulingService.checkForSchedulingEvent()` now take a single options object (`{ definition, submission, submissionTimestamp, parseDayOnlyDate, addDaysToDate, startOfDay, endOfDay }`).
 - **[BREAKING]** `generateFormElementsConditionallyShown()` now returns `{ formElementsConditionallyShown, isSubmissionEnabled }` and accepts optional `enableSubmission`. Form-fill submission enablement is evaluated here (visibility-aware) instead of a separate `evaluateConditionalPredicates()` call.
 
 ## [9.2.2] - 2026-07-09
