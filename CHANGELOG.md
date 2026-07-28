@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [10.0.0] - 2026-07-28
+
 ### Added
 
 - Support for `SUBMISSION_TIMESTAMP` predicates in `conditionalLogicService.evaluateConditionalPredicates()`. Compare the form submission timestamp to a custom date or date/datetime element, with an optional day offset, using `AFTER`/`BEFORE` (exclusive) or `BETWEEN` (inclusive). Pass required `submissionTimestamp`, `parseDayOnlyDate`, `addDaysToDate`, `startOfDay`, and `endOfDay` helpers when evaluating so callers control timezone-aware calendar arithmetic. sdk-core only calls `parseDayOnlyDate` for `YYYY-MM-DD` values; other date strings use `new Date(value)`. Client-side code evaluating during submission should pass `new Date().toISOString()`.
