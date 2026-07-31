@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `paymentService.getFormStorePaymentFromFormSubmissionPayment()` to map a form submission payment to Form Store payment fields (`status`, `providerTransactionId`, `providerReceiptNumber`)
 - payment provider factory in `paymentService` for provider-specific Form Store mapping and display detail transforms
+- `calculationService.evaluateExpression()` to evaluate OneBlink calculation expressions against submission data. Abstracts `morph-expressions` and registers `ROUND`, `ROUND_DOWN`, `ROUND_UP`, and `ISNULL`. Pass `parseDayOnlyDate` so callers control timezone-aware day-only (`YYYY-MM-DD`) date parsing (client vs server), matching the pattern used by conditional logic. Other date strings use `new Date(value)`.
+
+### Changed
+
+- `paymentService.checkForPaymentEvent()` now resolves payment amounts from all `FormPaymentEventAmountConfiguration` options: `elementId` (form element value), `paymentAmount` (fixed amount), and `paymentCalculation` (calculation expression via `calculationService.evaluateExpression()`).
 
 ## [10.0.0] - 2026-07-28
 

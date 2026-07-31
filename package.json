@@ -6,13 +6,16 @@
   "bugs": {
     "url": "https://github.com/oneblink/sdk-core-js/issues"
   },
+  "dependencies": {
+    "morph-expressions": "^1.1.1"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
     "@microsoft/eslint-plugin-sdl": "^1.1.0",
     "@microsoft/microsoft-graph-types": "^2.43.1",
     "@oneblink/release-cli": "^4.0.0-beta.2",
-    "@oneblink/types": "github:oneblink/types",
+    "@oneblink/types": "github:oneblink/types#AP-9801",
     "@salesforce/types": "^1.6.0",
     "@spotto/contract": "^1.0.69-alpha.13",
     "@types/lodash": "^4.17.23",
@@ -64,7 +67,7 @@
     "release": "oneblink-release repository --no-name",
     "start": "tsc-watch",
     "test": "vitest run",
-    "types": "npm install --save-dev github:oneblink/types",
+    "types": "npm install --save-dev github:oneblink/types#AP-9801",
     "typescript": "tsc --noEmit",
     "update-dependents": "oneblink-release update-dependents --force"
   },

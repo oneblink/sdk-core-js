@@ -1,6 +1,12 @@
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 
 /**
+ * Matches day-only (`YYYY-MM-DD`) date strings. Used to decide when to call
+ * `parseDayOnlyDate` instead of `new Date(value)`.
+ */
+export const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
  * Parse a day-only (`YYYY-MM-DD`) string into a `Date`. Callers supply
  * timezone-aware parsing (e.g. start of day in an organisation timezone).
  * sdk-core only invokes this for values that match `YYYY-MM-DD`.
