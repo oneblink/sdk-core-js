@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `paymentService.getFormStorePaymentFromFormSubmissionPayment()` to map a form submission payment to Form Store payment fields (`status`, `providerTransactionId`, `providerReceiptNumber`)
+- payment provider factory in `paymentService` for provider-specific Form Store mapping and display detail transforms
+
 ## [10.0.0] - 2026-07-28
 
 ### Added

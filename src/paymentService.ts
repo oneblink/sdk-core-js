@@ -4,16 +4,27 @@ import {
   SubmissionTypes,
 } from '@oneblink/types'
 import { conditionalLogicService, formElementsService } from './index.js'
-import {
-  getRootElementValueById,
-  ReplaceInjectablesFormatters,
-} from './submissionService.js'
+import { getRootElementValueById } from './submissionService.js'
 import {
   AddOffsetToDate,
   EndOfDay,
   ParseDayOnlyDate,
   StartOfDay,
 } from './conditionalLogicService/types.js'
+import getPaymentProvider from './paymentService/getPaymentProvider.js'
+import type {
+  FormStorePayment,
+  PaymentDisplayDetail,
+  PaymentDisplayFormatters,
+  PaymentDisplayDetailsResult,
+} from './paymentService/types.js'
+
+export {
+  FormStorePayment,
+  PaymentDisplayDetail,
+  PaymentDisplayDetailsResult,
+  PaymentDisplayFormatters,
+}
 
 /**
  * Examine a submission and its form definition to validate whether a payment
@@ -147,13 +158,6 @@ export function checkForPaymentEvent({
   return result
 }
 
-type PaymentDisplayDetail = {
-  label: string
-  value: string
-  /** A unique key across payment providers to identify the detail */
-  key: SubmissionEventTypes.PaymentDisplayDetailKey
-}
-
 /**
  * Retrieve an array of detail items from a form submission payment.
  *
@@ -178,337 +182,33 @@ type PaymentDisplayDetail = {
 export const getDisplayDetailsFromFormSubmissionPayment = (
   /** The form submission payment to get the details from */
   formSubmissionPayment: SubmissionTypes.FormSubmissionPayment,
-  {
-    formatCurrency,
-    formatDateTime,
-    formatDate,
-  }: Pick<
-    ReplaceInjectablesFormatters,
-    'formatCurrency' | 'formatDate' | 'formatDateTime'
-  >,
-):
-  | {
-      amount: {
-        value: number
-        formatted: string
-      }
-      paymentDisplayDetails: PaymentDisplayDetail[]
-    }
-  | undefined => {
-  switch (formSubmissionPayment.type) {
-    case 'NSW_GOV_PAY': {
-      const { paymentTransaction } = formSubmissionPayment
-      if (!paymentTransaction || !paymentTransaction.agencyCompletionPayment) {
-        return
-      }
+  formatters: PaymentDisplayFormatters,
+): PaymentDisplayDetailsResult | undefined => {
+  return getPaymentProvider(formSubmissionPayment.type).getDisplayDetails(
+    formSubmissionPayment,
+    formatters,
+  )
+}
 
-      const amount = {
-        value: paymentTransaction.agencyCompletionPayment.amount,
-        formatted: formatCurrency(
-          paymentTransaction.agencyCompletionPayment.amount,
-        ),
-      }
-      return {
-        amount,
-        paymentDisplayDetails: [
-          {
-            key: 'NSW_GOV_PAY_COMPLETION_REFERENCE',
-            label: 'Completion Reference',
-            value:
-              paymentTransaction.agencyCompletionPayment
-                .paymentCompletionReference,
-          },
-          {
-            key: 'NSW_GOV_PAY_PAYMENT_REFERENCE',
-            label: 'Payment Reference',
-            value: paymentTransaction.agencyCompletionPayment.paymentReference,
-          },
-          {
-            key: 'NSW_GOV_PAY_BANK_REFERENCE',
-            label: 'Bank Reference',
-            value: paymentTransaction.agencyCompletionPayment.bankReference,
-          },
-          {
-            key: 'NSW_GOV_PAY_PAYMENT_METHOD',
-            label: 'Payment Method',
-            value: paymentTransaction.agencyCompletionPayment.paymentMethod,
-          },
-          ...(paymentTransaction.agencyCompletionPayment.paymentMethod ===
-            'BPAY' &&
-          paymentTransaction.agencyCompletionPayment.bPay?.billerCode
-            ? [
-                {
-                  key: 'NSW_GOV_PAY_BPAY_BILLER_CODE' as const,
-                  label: 'BPay Biller Code',
-                  value:
-                    paymentTransaction.agencyCompletionPayment.bPay.billerCode,
-                },
-              ]
-            : []),
-          ...(paymentTransaction.agencyCompletionPayment.paymentMethod ===
-          'CARD'
-            ? [
-                {
-                  key: 'NSW_GOV_PAY_CREDIT_CARD_NUMBER' as const,
-                  label: 'Card Number',
-                  value: `xxxx xxxx xxxx ${paymentTransaction.agencyCompletionPayment.card?.last4Digits}`,
-                },
-              ]
-            : []),
-          {
-            key: 'NSW_GOV_PAY_AMOUNT',
-            label: 'Amount',
-            value: amount.formatted,
-          },
-          {
-            key: 'NSW_GOV_PAY_SURCHARGE_AMOUNT',
-            label: 'Surcharge Amount',
-            value: formatCurrency(
-              paymentTransaction.agencyCompletionPayment.surcharge,
-            ),
-          },
-          {
-            key: 'NSW_GOV_PAY_SURCHARGE_GST',
-            label: 'Surcharge GST',
-            value: formatCurrency(
-              paymentTransaction.agencyCompletionPayment.surchargeGst,
-            ),
-          },
-          {
-            key: 'NSW_GOV_PAY_CREATED_DATE_TIME',
-            label: 'Created Date Time',
-            value: formatDateTime(formSubmissionPayment.createdAt),
-          },
-        ],
-      }
-    }
-    case 'BPOINT': {
-      const { paymentTransaction } = formSubmissionPayment
-      if (!paymentTransaction) {
-        return
-      }
-      const amountValue = paymentTransaction.Amount / 100
-      const amount = {
-        value: amountValue,
-        formatted: formatCurrency(amountValue),
-      }
-      return {
-        amount,
-        paymentDisplayDetails: [
-          {
-            key: 'BPOINT_RECEIPT_NUMBER',
-            label: 'Receipt Number',
-            value: paymentTransaction.ReceiptNumber,
-          },
-          {
-            key: 'BPOINT_CRN1',
-            label: 'CRN 1',
-            value: paymentTransaction.Crn1,
-          },
-          {
-            key: 'BPOINT_CRN2',
-            label: 'CRN 2',
-            value: paymentTransaction.Crn2,
-          },
-          {
-            key: 'BPOINT_CRN3',
-            label: 'CRN 3',
-            value: paymentTransaction.Crn3,
-          },
-          {
-            key: 'BPOINT_BILLER_CODE',
-            label: 'Biller Code',
-            value: paymentTransaction.BillerCode,
-          },
-          {
-            key: 'BPOINT_CREDIT_CARD_MASK',
-            label: 'Card Number',
-            value: paymentTransaction.CardDetails.MaskedCardNumber,
-          },
-          {
-            key: 'BPOINT_AMOUNT',
-            label: 'Amount',
-            value: amount.formatted,
-          },
-          {
-            key: 'BPOINT_SURCHARGE_AMOUNT',
-            label: 'Surcharge Amount',
-            value: formatCurrency(paymentTransaction.AmountSurcharge / 100),
-          },
-          {
-            key: 'BPOINT_PROCESSED_DATE_TIME',
-            label: 'Processed Date Time',
-            value: formatDateTime(paymentTransaction.ProcessedDateTime),
-          },
-        ],
-      }
-    }
-    case 'CP_PAY': {
-      const { paymentTransaction } = formSubmissionPayment
-      if (!paymentTransaction) {
-        return
-      }
-
-      const determineDetails = () => {
-        switch (paymentTransaction.cpPayVersion) {
-          case 'v2': {
-            return {
-              transactionId: paymentTransaction.result.id,
-              orderNumber:
-                paymentTransaction.result.externalReferenceId ?? undefined,
-              paymentType: paymentTransaction.result.paymentType,
-              creditCardMask: paymentTransaction.result.lastFour
-                ? `xxxx xxxx xxxx ${paymentTransaction.result.lastFour}`
-                : undefined,
-              amount:
-                paymentTransaction.result.amount !== undefined
-                  ? {
-                      value: paymentTransaction.result.amount,
-                      formatted: formatCurrency(
-                        paymentTransaction.result.amount,
-                      ),
-                    }
-                  : {
-                      value: NaN,
-                      formatted: 'Unknown',
-                    },
-              createdDateTime: paymentTransaction.result.createdOnUtc,
-            }
-          }
-          default: {
-            return {
-              transactionId: paymentTransaction.transactionId,
-              orderNumber: paymentTransaction.orderNumber ?? undefined,
-              paymentType:
-                paymentTransaction.paymentTypeId === 1
-                  ? 'Credit/Debit Card'
-                  : paymentTransaction.paymentTypeId === 2
-                    ? 'ACH'
-                    : undefined,
-              creditCardMask: paymentTransaction.lastFour
-                ? `xxxx xxxx xxxx ${paymentTransaction.lastFour}`
-                : undefined,
-              amount: {
-                value: paymentTransaction.amount,
-                formatted: formatCurrency(paymentTransaction.amount),
-              },
-              createdDateTime: paymentTransaction.createdAt,
-            }
-          }
-        }
-      }
-
-      const {
-        transactionId,
-        orderNumber,
-        paymentType,
-        creditCardMask,
-        amount,
-        createdDateTime,
-      } = determineDetails()
-      const paymentDisplayDetails: PaymentDisplayDetail[] = []
-      if (transactionId) {
-        paymentDisplayDetails.push({
-          key: 'CP_PAY_TRANSACTION_ID',
-          label: 'Transaction Id',
-          value: transactionId,
-        })
-      }
-      if (orderNumber) {
-        paymentDisplayDetails.push({
-          key: 'CP_PAY_ORDER_NUMBER',
-          label: 'Order Number',
-          value: orderNumber,
-        })
-      }
-      if (paymentType) {
-        paymentDisplayDetails.push({
-          key: 'CP_PAY_PAYMENT_TYPE',
-          label: 'Payment Type',
-          value: paymentType,
-        })
-      }
-      if (creditCardMask) {
-        paymentDisplayDetails.push({
-          key: 'CP_PAY_CREDIT_CARD_MASK',
-          label: 'Card Number',
-          value: creditCardMask,
-        })
-      }
-      paymentDisplayDetails.push({
-        key: 'CP_PAY_AMOUNT',
-        label: 'Amount',
-        value: amount.formatted,
-      })
-      if (createdDateTime) {
-        paymentDisplayDetails.push({
-          key: 'CP_PAY_CREATED_DATE_TIME',
-          label: 'Created At',
-          value: formatDateTime(createdDateTime),
-        })
-      }
-
-      return {
-        amount,
-        paymentDisplayDetails,
-      }
-    }
-    case 'WESTPAC_QUICK_STREAM': {
-      const { paymentTransaction } = formSubmissionPayment
-      if (!paymentTransaction) {
-        return
-      }
-
-      const amount = {
-        value: paymentTransaction.totalAmount.amount,
-        formatted: formatCurrency(
-          parseFloat(paymentTransaction.totalAmount.amount.toString()),
-        ),
-      }
-
-      return {
-        amount,
-        paymentDisplayDetails: [
-          {
-            key: 'WESTPAC_QUICK_STREAM_RECEIPT_NUMBER',
-            label: 'Receipt Number',
-            value: paymentTransaction.receiptNumber,
-          },
-          {
-            key: 'WESTPAC_QUICK_STREAM_PAYMENT_REFERENCE_NUMBER',
-            label: 'Payment Reference',
-            value: paymentTransaction.paymentReferenceNumber,
-          },
-          {
-            key: 'WESTPAC_QUICK_STREAM_CUSTOMER_REFERENCE_NUMBER',
-            label: 'Customer Reference Number',
-            value: paymentTransaction.customerReferenceNumber,
-          },
-          {
-            key: 'WESTPAC_QUICK_STREAM_AMOUNT',
-            label: 'Amount',
-            value: amount.formatted,
-          },
-          ...(paymentTransaction.surchargeAmount.amount
-            ? [
-                {
-                  key: 'WESTPAC_QUICK_STREAM_SURCHARGE_AMOUNT' as const,
-                  label: 'Surcharge Amount',
-                  value: formatCurrency(
-                    parseFloat(
-                      paymentTransaction.surchargeAmount.amount.toString(),
-                    ),
-                  ),
-                },
-              ]
-            : []),
-          {
-            key: 'WESTPAC_QUICK_STREAM_SETTLEMENT_DATE',
-            label: 'Settlement Date',
-            value: formatDate(paymentTransaction.settlementDate),
-          },
-        ],
-      }
-    }
-  }
+/**
+ * Map a form submission payment to the Form Store payment property.
+ *
+ * #### Example
+ *
+ * ```js
+ * const formStorePayment =
+ *   paymentService.getFormStorePaymentFromFormSubmissionPayment(
+ *     formSubmissionPayment,
+ *   )
+ * ```
+ *
+ * @param formSubmissionPayment
+ * @returns
+ */
+export function getFormStorePaymentFromFormSubmissionPayment(
+  formSubmissionPayment: SubmissionTypes.FormSubmissionPayment,
+): FormStorePayment {
+  return getPaymentProvider(formSubmissionPayment.type).getFormStorePayment(
+    formSubmissionPayment,
+  )
 }
