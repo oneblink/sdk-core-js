@@ -54,15 +54,18 @@ describe('getDisplayDetailsFromFormSubmissionPayment', () => {
     })
 
     it('using BPAY', () => {
+      const paymentTransaction = formSubmissionPayment.paymentTransaction
+      if (!paymentTransaction?.agencyCompletionPayment) {
+        throw new Error('Expected NSW GovPay paymentTransaction')
+      }
+
       const details = paymentService.getDisplayDetailsFromFormSubmissionPayment(
         {
           ...formSubmissionPayment,
           paymentTransaction: {
-            ...formSubmissionPayment.paymentTransaction,
-            // @ts-expect-error Wrong
+            ...paymentTransaction,
             agencyCompletionPayment: {
-              ...formSubmissionPayment.paymentTransaction
-                .agencyCompletionPayment,
+              ...paymentTransaction.agencyCompletionPayment,
               paymentMethod: 'BPAY',
             },
           },
@@ -204,6 +207,222 @@ describe('getDisplayDetailsFromFormSubmissionPayment', () => {
         formatters,
       )
       expect(details).toMatchSnapshot()
+    })
+  })
+})
+
+describe('getFormStorePaymentFromFormSubmissionPayment', () => {
+  describe('NSW Gov Pay', () => {
+    it('returns status, payment reference and completion reference when completed', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'NSW_GOV_PAY',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'SUCCEEDED',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          paymentTransaction: {
+            agencyCompletionPayment: {
+              paymentCompletionReference: 'completion-ref',
+              paymentReference: 'payment-ref',
+              bankReference: 'bank-ref',
+              paymentMethod: 'CARD',
+              amount: 123.45,
+              surcharge: 12.34,
+              surchargeGst: 2.34,
+              agencyTransactionId: 'agencyTransactionId',
+            },
+            integrationPrimaryAgencyId: '1',
+            nswGovPayPaymentReference: 'nswGovPayPaymentReference',
+            redirectUrl: 'redirectUrl',
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'SUCCEEDED',
+        providerTransactionId: 'nswGovPayPaymentReference',
+        providerReceiptNumber: 'completion-ref',
+      })
+    })
+
+    it('returns status and payment reference when not completed', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'NSW_GOV_PAY',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'PENDING',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          paymentTransaction: {
+            integrationPrimaryAgencyId: '1',
+            nswGovPayPaymentReference: 'nswGovPayPaymentReference',
+            redirectUrl: 'redirectUrl',
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'PENDING',
+        providerTransactionId: 'nswGovPayPaymentReference',
+      })
+    })
+  })
+
+  describe('BPOINT', () => {
+    it('returns status, transaction number and receipt number', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'BPOINT',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'SUCCEEDED',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          paymentTransaction: {
+            Amount: 12345,
+            AmountSurcharge: 1234,
+            Action: 'PAYMENT',
+            AmountOriginal: 12345,
+            ReceiptNumber: 'receiptNumber',
+            TxnNumber: 'txnNumber',
+            BillerCode: 'billerCode',
+            Crn1: 'crn1',
+            Crn2: 'crn2',
+            Crn3: 'crn3',
+            // @ts-expect-error incomplete because type is large
+            CardDetails: {
+              MaskedCardNumber: 'creditCardMask',
+            },
+            ProcessedDateTime: '2024-09-11T12:00:00.000Z',
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'SUCCEEDED',
+        providerTransactionId: 'txnNumber',
+        providerReceiptNumber: 'receiptNumber',
+      })
+    })
+
+    it('returns status only when transaction is missing', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'BPOINT',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'PENDING',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'PENDING',
+      })
+    })
+  })
+
+  describe('CP Pay', () => {
+    it('returns transaction id and order number for v1', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'CP_PAY',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'SUCCEEDED',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          // @ts-expect-error incomplete because type is large
+          paymentTransaction: {
+            cpPayVersion: 'v1',
+            transactionId: 'v1-transaction-id',
+            orderNumber: 'orderNumber',
+            paymentTypeId: 1,
+            lastFour: '1234',
+            amount: 123.45,
+            createdAt: '2024-09-11T12:00:00.000Z',
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'SUCCEEDED',
+        providerTransactionId: 'v1-transaction-id',
+        providerReceiptNumber: 'orderNumber',
+      })
+    })
+
+    it('returns transaction id and external reference for v2', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'CP_PAY',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'FAILED',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          // @ts-expect-error incomplete because type is large
+          paymentTransaction: {
+            cpPayVersion: 'v2',
+            result: {
+              id: 'v2-transaction-id',
+              externalReferenceId: 'externalReferenceId',
+              paymentType: 'CreditDebitCard',
+              lastFour: '1234',
+              amount: 123.45,
+              createdOnUtc: '2024-09-11T12:00:00.000Z',
+            },
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'FAILED',
+        providerTransactionId: 'v2-transaction-id',
+        providerReceiptNumber: 'externalReferenceId',
+      })
+    })
+  })
+
+  describe('Westpac', () => {
+    it('returns status, payment reference and receipt number', () => {
+      const formStorePayment =
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          type: 'WESTPAC_QUICK_STREAM',
+          id: '1',
+          createdAt: '2024-09-11T12:00:00.000Z',
+          formId: 1,
+          status: 'SUCCEEDED',
+          submissionId: '111111111111',
+          updatedAt: '2024-09-11T12:00:00.000Z',
+          // @ts-expect-error unfinished because type is large
+          paymentTransaction: {
+            receiptNumber: 'westpac-receipt',
+            paymentReferenceNumber: 'paymentReferenceNumber',
+            customerReferenceNumber: 'customerReferenceNumber',
+            totalAmount: {
+              amount: 123.45,
+              displayAmount: '123.45',
+              currency: 'AUD',
+            },
+            surchargeAmount: {
+              amount: 12.34,
+              currency: 'AUD',
+              displayAmount: '12.34',
+            },
+            settlementDate: '2024-09-11T12:00:00.000Z',
+          },
+        })
+
+      expect(formStorePayment).toEqual({
+        status: 'SUCCEEDED',
+        providerTransactionId: 'paymentReferenceNumber',
+        providerReceiptNumber: 'westpac-receipt',
+      })
     })
   })
 })
