@@ -192,7 +192,7 @@ function resolvePaymentEventAmount({
         definition.elements,
         (element) => element.id === configuration.elementId,
       )
-      if (!amountElement || amountElement.type === 'page') {
+      if (!amountElement) {
         console.log(
           'Form has a payment submission event but the amount element does not exist, throwing error',
         )
