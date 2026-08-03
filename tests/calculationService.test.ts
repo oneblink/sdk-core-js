@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import {
   evaluateExpression,
+  findMissingFormElementsInExpression,
   ParseDayOnlyDate,
 } from '../src/calculationService'
 
@@ -30,7 +31,7 @@ describe('evaluateExpression()', () => {
       formElements: [],
       parseDayOnlyDate,
     })
-    expect(result).toBe(7)
+    expect(result).toEqual({ type: 'RESULT', value: 7 })
   })
 
   test('resolves {ELEMENT:...} references from submission', () => {
@@ -46,7 +47,7 @@ describe('evaluateExpression()', () => {
       ],
       parseDayOnlyDate,
     })
-    expect(result).toBe(37.5)
+    expect(result).toEqual({ type: 'RESULT', value: 37.5 })
   })
 
   test('ROUND rounds floating point numbers correctly', () => {
@@ -56,7 +57,7 @@ describe('evaluateExpression()', () => {
       formElements: [createNumberElement('Amount')],
       parseDayOnlyDate,
     })
-    expect(result).toBe(110)
+    expect(result).toEqual({ type: 'RESULT', value: 110 })
   })
 
   test('ROUND_DOWN and ROUND_UP', () => {
@@ -67,7 +68,7 @@ describe('evaluateExpression()', () => {
         formElements: [],
         parseDayOnlyDate,
       }),
-    ).toBe(1)
+    ).toEqual({ type: 'RESULT', value: 1 })
 
     expect(
       evaluateExpression({
@@ -76,7 +77,7 @@ describe('evaluateExpression()', () => {
         formElements: [],
         parseDayOnlyDate,
       }),
-    ).toBe(2)
+    ).toEqual({ type: 'RESULT', value: 2 })
   })
 
   test('ISNULL returns default for unentered values', () => {
@@ -91,7 +92,7 @@ describe('evaluateExpression()', () => {
       ],
       parseDayOnlyDate,
     })
-    expect(result).toBe(15)
+    expect(result).toEqual({ type: 'RESULT', value: 15 })
   })
 
   test('parses day-only dates via injected parseDayOnlyDate as timestamps', () => {
@@ -102,13 +103,13 @@ describe('evaluateExpression()', () => {
         Start: '2024-01-01',
         End: '2024-01-02',
       },
-      formElements: [],
+      formElements: [createNumberElement('Start'), createNumberElement('End')],
       parseDayOnlyDate: parseDayOnlyDateSpy,
     })
 
     expect(parseDayOnlyDateSpy).toHaveBeenCalledWith('2024-01-01')
     expect(parseDayOnlyDateSpy).toHaveBeenCalledWith('2024-01-02')
-    expect(result).toBe(24 * 60 * 60 * 1000)
+    expect(result).toEqual({ type: 'RESULT', value: 24 * 60 * 60 * 1000 })
   })
 
   test('parses ISO datetime strings with new Date without calling parseDayOnlyDate', () => {
@@ -121,12 +122,12 @@ describe('evaluateExpression()', () => {
         Start: start,
         End: end,
       },
-      formElements: [],
+      formElements: [createNumberElement('Start'), createNumberElement('End')],
       parseDayOnlyDate: parseDayOnlyDateSpy,
     })
 
     expect(parseDayOnlyDateSpy).not.toHaveBeenCalled()
-    expect(result).toBe(24 * 60 * 60 * 1000)
+    expect(result).toEqual({ type: 'RESULT', value: 24 * 60 * 60 * 1000 })
   })
 
   test('falls back to parseFloat when value is not a date', () => {
@@ -136,10 +137,10 @@ describe('evaluateExpression()', () => {
         A: '10',
         B: '2.5',
       },
-      formElements: [],
+      formElements: [createNumberElement('A'), createNumberElement('B')],
       parseDayOnlyDate,
     })
-    expect(result).toBe(12.5)
+    expect(result).toEqual({ type: 'RESULT', value: 12.5 })
   })
 
   test('sums checkbox-style numeric arrays', () => {
@@ -148,10 +149,10 @@ describe('evaluateExpression()', () => {
       submission: {
         Options: ['1', '2', '3'],
       },
-      formElements: [],
+      formElements: [createNumberElement('Options')],
       parseDayOnlyDate,
     })
-    expect(result).toBe(6)
+    expect(result).toEqual({ type: 'RESULT', value: 6 })
   })
 
   test('sums values across repeatable set entries', () => {
@@ -160,10 +161,20 @@ describe('evaluateExpression()', () => {
       submission: {
         Items: [{ Amount: 10 }, { Amount: 15 }, { Amount: 5 }],
       },
-      formElements: [],
+      formElements: [
+        {
+          id: 'items',
+          name: 'Items',
+          type: 'repeatableSet',
+          label: 'Items',
+          conditionallyShow: false,
+          requiresAllConditionallyShowPredicates: false,
+          elements: [createNumberElement('Amount')],
+        },
+      ],
       parseDayOnlyDate,
     })
-    expect(result).toBe(30)
+    expect(result).toEqual({ type: 'RESULT', value: 30 })
   })
 
   test('resolves nested form element values', () => {
@@ -188,7 +199,7 @@ describe('evaluateExpression()', () => {
       formElements,
       parseDayOnlyDate,
     })
-    expect(result).toBe(42)
+    expect(result).toEqual({ type: 'RESULT', value: 42 })
   })
 
   test('parses compliance element value property', () => {
@@ -199,51 +210,182 @@ describe('evaluateExpression()', () => {
           value: '7',
         },
       },
+      formElements: [createNumberElement('Compliance')],
+      parseDayOnlyDate,
+    })
+    expect(result).toEqual({ type: 'RESULT', value: 7 })
+  })
+
+  test('returns INVALID_EXPRESSION for invalid expressions', () => {
+    const result = evaluateExpression({
+      expression: '1 +',
+      submission: {},
       formElements: [],
       parseDayOnlyDate,
     })
-    expect(result).toBe(7)
+    expect(result.type).toBe('INVALID_EXPRESSION')
+    if (result.type === 'INVALID_EXPRESSION') {
+      expect(result.error).toBeInstanceOf(Error)
+    }
   })
 
-  test('throws for invalid expressions', () => {
-    expect(() =>
-      evaluateExpression({
-        expression: '1 +',
-        submission: {},
-        formElements: [],
-        parseDayOnlyDate,
-      }),
-    ).toThrow()
+  test('returns INVALID_EXPRESSION for empty expressions', () => {
+    const result = evaluateExpression({
+      expression: '',
+      submission: {},
+      formElements: [],
+      parseDayOnlyDate,
+    })
+    expect(result).toEqual({
+      type: 'INVALID_EXPRESSION',
+      error: new Error('Expression is required.'),
+    })
   })
 
-  test('throws for empty expressions', () => {
-    expect(() =>
-      evaluateExpression({
-        expression: '',
-        submission: {},
-        formElements: [],
-        parseDayOnlyDate,
-      }),
-    ).toThrow('Expression is required.')
-  })
-
-  test('returns undefined when result is not a number', () => {
+  test('returns MISSING_VALUES when result is not a number', () => {
     const result = evaluateExpression({
       expression: 'true',
       submission: {},
       formElements: [],
       parseDayOnlyDate,
     })
-    expect(result).toBeUndefined()
+    expect(result).toEqual({ type: 'MISSING_VALUES' })
   })
 
-  test('returns undefined when referenced element has no numeric value', () => {
+  test('returns MISSING_VALUES when referenced element has no submission value', () => {
     const result = evaluateExpression({
-      expression: '{ELEMENT:Missing}',
+      expression: '{ELEMENT:Amount}',
       submission: {},
-      formElements: [],
+      formElements: [createNumberElement('Amount')],
       parseDayOnlyDate,
     })
-    expect(result).toBeUndefined()
+    expect(result).toEqual({ type: 'MISSING_VALUES' })
+  })
+})
+
+describe('findMissingFormElementsInExpression()', () => {
+  test('returns an empty array when all referenced elements exist', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Quantity} * {ELEMENT:Price}',
+        formElements: [
+          createNumberElement('Quantity'),
+          createNumberElement('Price'),
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  test('returns missing element names when referenced elements are not in the definition', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Missing} + {ELEMENT:AlsoMissing}',
+        formElements: [],
+      }),
+    ).toEqual(['Missing', 'AlsoMissing'])
+  })
+
+  test('returns the nested path when a child element is missing', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Items|Amount}',
+        formElements: [
+          {
+            id: 'items',
+            name: 'Items',
+            type: 'repeatableSet',
+            label: 'Items',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [],
+          },
+        ],
+      }),
+    ).toEqual(['Items|Amount'])
+  })
+
+  test('treats elements inside repeatableSet as missing when the parent path is omitted', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Amount}',
+        formElements: [
+          {
+            id: 'items',
+            name: 'Items',
+            type: 'repeatableSet',
+            label: 'Items',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Amount')],
+          },
+        ],
+      }),
+    ).toEqual(['Amount'])
+  })
+
+  test('treats elements inside nested form as missing when the parent path is omitted', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Child}',
+        formElements: [
+          {
+            id: 'nested-form',
+            name: 'Nested',
+            type: 'form',
+            formId: 1,
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Child')],
+          },
+        ],
+      }),
+    ).toEqual(['Child'])
+  })
+
+  test('allows root references to elements inside page or section containers', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Amount}',
+        formElements: [
+          {
+            id: 'page-1',
+            type: 'page',
+            label: 'Page 1',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [
+              {
+                id: 'section-1',
+                type: 'section',
+                label: 'Section 1',
+                conditionallyShow: false,
+                requiresAllConditionallyShowPredicates: false,
+                isCollapsed: false,
+                elements: [createNumberElement('Amount')],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  test('resolves nested paths that correctly include the repeatableSet parent', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Items|Amount}',
+        formElements: [
+          {
+            id: 'items',
+            name: 'Items',
+            type: 'repeatableSet',
+            label: 'Items',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Amount')],
+          },
+        ],
+      }),
+    ).toEqual([])
   })
 })
