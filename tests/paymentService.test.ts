@@ -140,6 +140,44 @@ describe('checkForPaymentEvent', () => {
     })
   })
 
+  it('returns undefined when paymentCalculation is missing submission values', () => {
+    const result = paymentService.checkForPaymentEvent({
+      definition: createForm({
+        type: 'CP_PAY',
+        configuration: {
+          amountType: 'EXPRESSION',
+          paymentCalculation: '{ELEMENT:Amount}',
+          gatewayId: 'gateway-id',
+        },
+      }),
+      submission: {},
+      ...dateHelpers,
+    })
+    expect(result).toBeUndefined()
+  })
+
+  it('throws when paymentCalculation references a missing form element', () => {
+    expect(() =>
+      paymentService.checkForPaymentEvent({
+        definition: createForm(
+          {
+            type: 'CP_PAY',
+            configuration: {
+              amountType: 'EXPRESSION',
+              paymentCalculation: '{ELEMENT:Missing}',
+              gatewayId: 'gateway-id',
+            },
+          },
+          [],
+        ),
+        submission: {},
+        ...dateHelpers,
+      }),
+    ).toThrow(
+      'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+    )
+  })
+
   it('returns undefined when amount is 0', () => {
     const result = paymentService.checkForPaymentEvent({
       definition: createForm({

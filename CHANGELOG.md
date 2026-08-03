@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `paymentService.getFormStorePaymentFromFormSubmissionPayment()` to map a form submission payment to Form Store payment fields (`status`, `providerTransactionId`, `providerReceiptNumber`)
 - payment provider factory in `paymentService` for provider-specific Form Store mapping and display detail transforms
-- `calculationService.evaluateExpression()` to evaluate OneBlink calculation expressions against submission data. Abstracts `morph-expressions` and registers `ROUND`, `ROUND_DOWN`, `ROUND_UP`, and `ISNULL`. Pass `parseDayOnlyDate` so callers control timezone-aware day-only (`YYYY-MM-DD`) date parsing (client vs server), matching the pattern used by conditional logic. Other date strings use `new Date(value)`.
+- `calculationService.evaluateExpression()` to evaluate OneBlink calculation expressions against submission data. Abstracts `morph-expressions` and registers `ROUND`, `ROUND_DOWN`, `ROUND_UP`, and `ISNULL`. Pass `parseDayOnlyDate` so callers control timezone-aware day-only (`YYYY-MM-DD`) date parsing (client vs server), matching the pattern used by conditional logic. Other date strings use `new Date(value)`. Returns a discriminated `EvaluateExpressionResult`: `{ type: 'RESULT', value }`, `{ type: 'MISSING_VALUES' }`, or `{ type: 'INVALID_EXPRESSION', error }` (empty expressions and parse failures; unexpected runtime errors are still thrown).
+- `calculationService.findMissingFormElementsInExpression()` to return the `{ELEMENT:...}` name paths referenced by an expression that are missing from the form definition. Intended for server-side payment validation; skip on the client during interactive calculation evaluation.
 
 ### Changed
 
-- `paymentService.checkForPaymentEvent()` now resolves payment amounts from all `FormPaymentEventAmountConfiguration` options: `elementId` (form element value), `paymentAmount` (fixed amount), and `paymentCalculation` (calculation expression via `calculationService.evaluateExpression()`).
+- `paymentService.checkForPaymentEvent()` now resolves payment amounts from all `FormPaymentEventAmountConfiguration` options: `elementId` (form element value), `paymentAmount` (fixed amount), and `paymentCalculation` (calculation expression via `calculationService`). For `EXPRESSION` amounts: missing referenced form elements or an invalid expression throw a configuration error; missing submission values skip payment (same as an empty/zero amount).
 
 ## [10.0.0] - 2026-07-28
 

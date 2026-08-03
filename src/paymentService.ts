@@ -156,7 +156,7 @@ function resolvePaymentEventAmount({
   definition: FormTypes.Form
   submission: SubmissionTypes.S3SubmissionData['submission']
   parseDayOnlyDate: ParseDayOnlyDate
-}): unknown {
+}): number | undefined {
   switch (configuration.amountType) {
     case 'NUMBER': {
       console.log(
@@ -170,12 +170,53 @@ function resolvePaymentEventAmount({
         'Evaluating payment calculation from payment submission event configuration',
         configuration.paymentCalculation,
       )
-      return calculationService.evaluateExpression({
+      const missingFormElementNames =
+        calculationService.findMissingFormElementsInExpression({
+          expression: configuration.paymentCalculation,
+          formElements: definition.elements,
+        })
+      if (missingFormElementNames.length) {
+        console.log(
+          'Form has a payment submission event but the calculation references missing form elements, throwing error',
+          missingFormElementNames,
+        )
+        throw new Error(
+          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+        )
+      }
+
+      const expressionResult = calculationService.evaluateExpression({
         expression: configuration.paymentCalculation,
         submission,
         formElements: definition.elements,
         parseDayOnlyDate,
       })
+      switch (expressionResult.type) {
+        case 'RESULT': {
+          return expressionResult.value
+        }
+        case 'MISSING_VALUES': {
+          console.log(
+            'Form has a payment submission event but the calculation is missing submission values, finishing as normal submission',
+          )
+          return
+        }
+        case 'INVALID_EXPRESSION': {
+          console.log(
+            'Form has a payment submission event but the calculation expression is invalid, throwing error',
+            expressionResult,
+          )
+          throw new Error(
+            'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+          )
+        }
+        default: {
+          const neverResult: never = expressionResult
+          throw new Error(
+            `Unexpected payment calculation result: ${JSON.stringify(neverResult)}`,
+          )
+        }
+      }
     }
     case 'FORM_ELEMENT':
     default: {
@@ -206,11 +247,15 @@ function resolvePaymentEventAmount({
         amountElement,
       )
 
-      return getRootElementValueById(
+      const amount = getRootElementValueById(
         amountElement.id,
         definition.elements,
         submission,
       )
+
+      if (typeof amount === 'number' && !Number.isNaN(amount)) {
+        return amount
+      }
     }
   }
 }

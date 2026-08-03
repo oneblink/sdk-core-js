@@ -11,6 +11,11 @@ import {
 
 export type { ParseDayOnlyDate } from './conditionalLogicService/types.js'
 
+export type EvaluateExpressionResult =
+  | { type: 'RESULT'; value: number }
+  | { type: 'MISSING_VALUES' }
+  | { type: 'INVALID_EXPRESSION'; error: Error }
+
 const isUnenteredValue = (value: unknown | undefined) => {
   return !value && value !== 0
 }
@@ -34,6 +39,76 @@ function roundToFixed(number: number, decimals: number) {
   const multiplier = Math.pow(10, decimals)
   const roundedNumber = Math.round(number * multiplier) / multiplier
   return roundedNumber.toFixed(decimals)
+}
+
+function findFormElementByNamePath(
+  formElements: FormTypes.FormElement[],
+  elementName: string,
+): FormTypes.FormElement | undefined {
+  const parts = elementName.split('|')
+  let searchElements = formElements
+  let found: FormTypes.FormElement | undefined
+
+  for (let i = 0; i < parts.length; i++) {
+    const name = parts[i]
+    found = findFormElement(
+      searchElements,
+      (element) => 'name' in element && element.name === name,
+    )
+    if (!found) {
+      return
+    }
+
+    if (i < parts.length - 1) {
+      if (!('elements' in found) || !found.elements) {
+        return
+      }
+      searchElements = found.elements
+    }
+  }
+
+  return found
+}
+
+/**
+ * Find `{ELEMENT:...}` references in an expression whose name paths do not
+ * exist in the form definition.
+ *
+ * Intended for server-side payment validation. Skip this on the client during
+ * interactive calculation evaluation — it walks the form definition for every
+ * referenced element and is unnecessary for display.
+ *
+ * @returns Missing element name paths (e.g. `Amount` or `Items|Amount`), or an
+ *   empty array when every referenced element exists.
+ */
+export function findMissingFormElementsInExpression({
+  expression,
+  formElements,
+}: {
+  expression: string
+  formElements: FormTypes.FormElement[]
+}): string[] {
+  if (!expression) {
+    return []
+  }
+
+  const elementNames: string[] = []
+  matchElementsTagRegex(expression, ({ elementName }) => {
+    elementNames.push(elementName)
+  })
+
+  const missingFormElementNames: string[] = []
+  const seen = new Set<string>()
+  for (const elementName of elementNames) {
+    if (seen.has(elementName)) {
+      continue
+    }
+    seen.add(elementName)
+    if (!findFormElementByNamePath(formElements, elementName)) {
+      missingFormElementNames.push(elementName)
+    }
+  }
+  return missingFormElementNames
 }
 
 function resolveElementValue({
@@ -240,7 +315,7 @@ function resolveElementValue({
  *   `parseFloat`
  * - Arrays of numeric strings (e.g. checkboxes) are summed
  * - Repeatable set entries sum the referenced nested numeric values
- * - Empty arrays yield `NaN` (calculation result becomes `undefined`)
+ * - Empty arrays yield `NaN` (result type `MISSING_VALUES`)
  * - Compliance element objects use their `value` property
  *
  * ##### Built-in functions
@@ -258,14 +333,14 @@ function resolveElementValue({
  * ##### Examples
  *
  * ```js
- * const value = calculationService.evaluateExpression({
+ * const result = calculationService.evaluateExpression({
  *   expression: '{ELEMENT:Quantity} * {ELEMENT:Price}',
  *   submission: { Quantity: 3, Price: 12.5 },
  *   formElements: form.elements,
  *   // Client: local timezone. Server: organisation timezone.
  *   parseDayOnlyDate: (value) => new Date(`${value}T00:00:00.000Z`),
  * })
- * // value === 37.5
+ * // result === { type: 'RESULT', value: 37.5 }
  * ```
  *
  * ```js
@@ -275,7 +350,7 @@ function resolveElementValue({
  *   formElements: form.elements,
  *   parseDayOnlyDate: (value) => new Date(`${value}T00:00:00.000Z`),
  * })
- * // 110
+ * // { type: 'RESULT', value: 110 }
  * ```
  *
  * ```js
@@ -285,13 +360,14 @@ function resolveElementValue({
  *   formElements: form.elements,
  *   parseDayOnlyDate: (value) => new Date(`${value}T00:00:00.000Z`),
  * })
- * // 5
+ * // { type: 'RESULT', value: 5 }
  * ```
  *
  * @param options
- * @returns The evaluated numeric result, or `undefined` when evaluation does
- *   not yield a valid number (including `NaN`). Throws when the expression
- *   cannot be parsed.
+ * @returns A discriminated result describing the outcome of evaluation. Empty
+ *   expressions and parse failures return
+ *   `{ type: 'INVALID_EXPRESSION', error }`. Unexpected runtime errors are
+ *   rethrown.
  */
 export function evaluateExpression({
   expression,
@@ -305,7 +381,7 @@ export function evaluateExpression({
   submission: SubmissionTypes.S3SubmissionData['submission']
   /**
    * Form elements definition. Used to resolve nested `form` element values
-   * referenced in the expression.
+   * referenced in the expression and to validate `{ELEMENT:...}` references.
    */
   formElements: FormTypes.FormElement[]
   /**
@@ -314,10 +390,18 @@ export function evaluateExpression({
    * `new Date(value)`.
    */
   parseDayOnlyDate: ParseDayOnlyDate
-}): number | undefined {
+}): EvaluateExpressionResult {
   if (!expression) {
-    throw new Error('Expression is required.')
+    return {
+      type: 'INVALID_EXPRESSION',
+      error: new Error('Expression is required.'),
+    }
   }
+
+  const elementNames: string[] = []
+  matchElementsTagRegex(expression, ({ elementName }) => {
+    elementNames.push(elementName)
+  })
 
   const exprParser = new ExpressionParser<
     SubmissionTypes.S3SubmissionData['submission']
@@ -350,11 +434,6 @@ export function evaluateExpression({
     },
   )
 
-  const elementNames: string[] = []
-  matchElementsTagRegex(expression, ({ elementName }) => {
-    elementNames.push(elementName)
-  })
-
   const code = elementNames.reduce((code, elementName, index) => {
     const regex = new RegExp(escapeRegExp(`{ELEMENT:${elementName}}`), 'g')
     const replacement = `a${index}`
@@ -371,8 +450,25 @@ export function evaluateExpression({
     return code.replace(regex, replacement)
   }, expression)
 
-  const result = exprParser.parse(code.trim()).eval(submission)
-  if (typeof result === 'number' && !Number.isNaN(result)) {
-    return result
+  let parsed
+  try {
+    parsed = exprParser.parse(code.trim())
+  } catch (error) {
+    return {
+      type: 'INVALID_EXPRESSION',
+      error: error instanceof Error ? error : new Error(String(error)),
+    }
   }
+
+  const result = parsed.eval(submission)
+  // Match historical behaviour: any non-NaN number (including Infinity) is a
+  // usable calculation result for display.
+  if (typeof result === 'number' && !Number.isNaN(result)) {
+    return { type: 'RESULT', value: result }
+  }
+
+  // Successfully parsed expressions that do not yield a number (e.g. `true`,
+  // non-numeric element values) previously returned `undefined` with no error
+  // in the form UI. Treat them the same as missing submission values.
+  return { type: 'MISSING_VALUES' }
 }
