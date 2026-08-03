@@ -6,6 +6,9 @@
   "bugs": {
     "url": "https://github.com/oneblink/sdk-core-js/issues"
   },
+  "dependencies": {
+    "morph-expressions": "^1.1.1"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",

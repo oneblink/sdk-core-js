@@ -1,14 +1,13 @@
 import { ConditionTypes } from '@oneblink/types'
 import {
   AddOffsetToDate,
+  DATE_ONLY_PATTERN,
   EndOfDay,
   FormElementsCtrl,
   ParseDayOnlyDate,
   StartOfDay,
 } from './types.js'
 import { getElementAndValue } from './evaluateFormElementConditionalPredicate.js'
-
-const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 type DayBoundary = 'start' | 'end'
 

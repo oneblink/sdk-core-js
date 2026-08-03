@@ -20,6 +20,16 @@ export * as formElementsService from './formElementsService.js'
  */
 export * as conditionalLogicService from './conditionalLogicService.js'
 /**
+ * ## Calculation Service
+ *
+ * Helper functions for evaluating form calculation expressions
+ *
+ * ```js
+ * import { calculationService } from '@oneblink/sdk-core'
+ * ```
+ */
+export * as calculationService from './calculationService.js'
+/**
  * ## Submission Service
  *
  * Helper functions for handling form submission data

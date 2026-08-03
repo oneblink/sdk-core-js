@@ -1,6 +1,197 @@
 import { describe, expect, it } from 'vitest'
-import { SubmissionTypes } from '@oneblink/types'
+import {
+  FormTypes,
+  SubmissionEventTypes,
+  SubmissionTypes,
+} from '@oneblink/types'
 import { paymentService } from '../src'
+
+describe('checkForPaymentEvent', () => {
+  const amountElementId = 'amount-element-id'
+  const amountElement: FormTypes.NumberElement = {
+    id: amountElementId,
+    name: 'Amount',
+    type: 'number',
+    label: 'Amount',
+    readOnly: false,
+    required: false,
+    conditionallyShow: false,
+    requiresAllConditionallyShowPredicates: false,
+    isElementLookup: false,
+    isDataLookup: false,
+    isSlider: false,
+  }
+
+  const createForm = (
+    paymentEvent: SubmissionEventTypes.FormPaymentEvent,
+    elements: FormTypes.FormElement[] = [amountElement],
+  ): FormTypes.Form =>
+    ({
+      id: 1,
+      name: 'Payment Form',
+      description: '',
+      organisationId: 'org',
+      formsAppEnvironmentId: 1,
+      formsAppIds: [],
+      elements,
+      isAuthenticated: false,
+      isMultiPage: false,
+      postSubmissionAction: 'CLOSE',
+      cancelAction: 'CLOSE',
+      submissionEvents: [],
+      tags: [],
+      paymentEvents: [paymentEvent],
+      publishStartDate: undefined,
+      publishEndDate: undefined,
+      unpublishedUserMessage: undefined,
+      createdAt: '2024-09-11T12:00:00.000Z',
+      updatedAt: '2024-09-11T12:00:00.000Z',
+    }) satisfies FormTypes.Form
+
+  const dateHelpers = {
+    submissionTimestamp: '2024-09-11T12:00:00.000Z',
+    parseDayOnlyDate: (value: string) => new Date(`${value}T00:00:00.000Z`),
+    addDaysToDate: (date: Date, days: number) => {
+      date.setUTCDate(date.getUTCDate() + days)
+      return date
+    },
+    startOfDay: (date: Date) => {
+      date.setUTCHours(0, 0, 0, 0)
+      return date
+    },
+    endOfDay: (date: Date) => {
+      date.setUTCHours(23, 59, 59, 999)
+      return date
+    },
+  }
+
+  it('resolves amount from elementId', () => {
+    const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
+      type: 'CP_PAY',
+      configuration: {
+        amountType: 'FORM_ELEMENT',
+        elementId: amountElementId,
+        gatewayId: 'gateway-id',
+      },
+    }
+    const result = paymentService.checkForPaymentEvent({
+      definition: createForm(paymentSubmissionEvent),
+      submission: { Amount: 42.5 },
+      ...dateHelpers,
+    })
+    expect(result).toEqual({
+      paymentSubmissionEvent,
+      amount: 42.5,
+    })
+  })
+
+  it('resolves amount from paymentAmount', () => {
+    const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
+      type: 'CP_PAY',
+      configuration: {
+        amountType: 'NUMBER',
+        paymentAmount: 99.95,
+        gatewayId: 'gateway-id',
+      },
+    }
+    const result = paymentService.checkForPaymentEvent({
+      definition: createForm(paymentSubmissionEvent, []),
+      submission: {},
+      ...dateHelpers,
+    })
+    expect(result).toEqual({
+      paymentSubmissionEvent,
+      amount: 99.95,
+    })
+  })
+
+  it('resolves amount from paymentCalculation', () => {
+    const quantityElement: FormTypes.NumberElement = {
+      ...amountElement,
+      id: 'quantity-element-id',
+      name: 'Quantity',
+      label: 'Quantity',
+    }
+    const priceElement: FormTypes.NumberElement = {
+      ...amountElement,
+      id: 'price-element-id',
+      name: 'Price',
+      label: 'Price',
+    }
+    const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
+      type: 'CP_PAY',
+      configuration: {
+        amountType: 'EXPRESSION',
+        paymentCalculation: '{ELEMENT:Quantity} * {ELEMENT:Price}',
+        gatewayId: 'gateway-id',
+      },
+    }
+    const result = paymentService.checkForPaymentEvent({
+      definition: createForm(paymentSubmissionEvent, [
+        quantityElement,
+        priceElement,
+      ]),
+      submission: { Quantity: 3, Price: 12.5 },
+      ...dateHelpers,
+    })
+    expect(result).toEqual({
+      paymentSubmissionEvent,
+      amount: 37.5,
+    })
+  })
+
+  it('returns undefined when amount is 0', () => {
+    const result = paymentService.checkForPaymentEvent({
+      definition: createForm({
+        type: 'CP_PAY',
+        configuration: {
+          amountType: 'NUMBER',
+          paymentAmount: 0,
+          gatewayId: 'gateway-id',
+        },
+      }),
+      submission: {},
+      ...dateHelpers,
+    })
+    expect(result).toBeUndefined()
+  })
+
+  it('throws when amountType and elementId are not set', () => {
+    expect(() =>
+      paymentService.checkForPaymentEvent({
+        definition: createForm({
+          type: 'CP_PAY',
+          configuration: {
+            gatewayId: 'gateway-id',
+          } as SubmissionEventTypes.CPPaySubmissionEvent['configuration'],
+        }),
+        submission: {},
+        ...dateHelpers,
+      }),
+    ).toThrow(
+      'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+    )
+  })
+
+  it('returns undefined when there is no payment event', () => {
+    const result = paymentService.checkForPaymentEvent({
+      definition: {
+        ...createForm({
+          type: 'CP_PAY',
+          configuration: {
+            amountType: 'NUMBER',
+            paymentAmount: 10,
+            gatewayId: 'gateway-id',
+          },
+        }),
+        paymentEvents: [],
+      },
+      submission: {},
+      ...dateHelpers,
+    })
+    expect(result).toBeUndefined()
+  })
+})
 
 describe('getDisplayDetailsFromFormSubmissionPayment', () => {
   const formatters = {
