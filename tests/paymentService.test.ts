@@ -69,6 +69,7 @@ describe('checkForPaymentEvent', () => {
     const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
       type: 'CP_PAY',
       configuration: {
+        amountType: 'FORM_ELEMENT',
         elementId: amountElementId,
         gatewayId: 'gateway-id',
       },
@@ -88,6 +89,7 @@ describe('checkForPaymentEvent', () => {
     const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
       type: 'CP_PAY',
       configuration: {
+        amountType: 'NUMBER',
         paymentAmount: 99.95,
         gatewayId: 'gateway-id',
       },
@@ -119,6 +121,7 @@ describe('checkForPaymentEvent', () => {
     const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
       type: 'CP_PAY',
       configuration: {
+        amountType: 'EXPRESSION',
         paymentCalculation: '{ELEMENT:Quantity} * {ELEMENT:Price}',
         gatewayId: 'gateway-id',
       },
@@ -142,6 +145,7 @@ describe('checkForPaymentEvent', () => {
       definition: createForm({
         type: 'CP_PAY',
         configuration: {
+          amountType: 'NUMBER',
           paymentAmount: 0,
           gatewayId: 'gateway-id',
         },
@@ -152,12 +156,30 @@ describe('checkForPaymentEvent', () => {
     expect(result).toBeUndefined()
   })
 
+  it('throws when amountType and elementId are not set', () => {
+    expect(() =>
+      paymentService.checkForPaymentEvent({
+        definition: createForm({
+          type: 'CP_PAY',
+          configuration: {
+            gatewayId: 'gateway-id',
+          } as SubmissionEventTypes.CPPaySubmissionEvent['configuration'],
+        }),
+        submission: {},
+        ...dateHelpers,
+      }),
+    ).toThrow(
+      'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+    )
+  })
+
   it('returns undefined when there is no payment event', () => {
     const result = paymentService.checkForPaymentEvent({
       definition: {
         ...createForm({
           type: 'CP_PAY',
           configuration: {
+            amountType: 'NUMBER',
             paymentAmount: 10,
             gatewayId: 'gateway-id',
           },

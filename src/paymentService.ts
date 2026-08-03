@@ -157,59 +157,62 @@ function resolvePaymentEventAmount({
   submission: SubmissionTypes.S3SubmissionData['submission']
   parseDayOnlyDate: ParseDayOnlyDate
 }): unknown {
-  if ('paymentAmount' in configuration) {
-    console.log(
-      'Using fixed payment amount from payment submission event configuration',
-      configuration.paymentAmount,
-    )
-    return configuration.paymentAmount
-  }
-
-  if ('paymentCalculation' in configuration) {
-    console.log(
-      'Evaluating payment calculation from payment submission event configuration',
-      configuration.paymentCalculation,
-    )
-    return calculationService.evaluateExpression({
-      expression: configuration.paymentCalculation,
-      submission,
-      formElements: definition.elements,
-      parseDayOnlyDate,
-    })
-  }
-
-  if ('elementId' in configuration) {
-    const amountElement = formElementsService.findFormElement(
-      definition.elements,
-      (element) => element.id === configuration.elementId,
-    )
-    if (!amountElement || amountElement.type === 'page') {
+  switch (configuration.amountType) {
+    case 'NUMBER': {
       console.log(
-        'Form has a payment submission event but the amount element does not exist, throwing error',
+        'Using fixed payment amount from payment submission event configuration',
+        configuration.paymentAmount,
       )
-      throw new Error(
-        'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+      return configuration.paymentAmount
+    }
+    case 'EXPRESSION': {
+      console.log(
+        'Evaluating payment calculation from payment submission event configuration',
+        configuration.paymentCalculation,
+      )
+      return calculationService.evaluateExpression({
+        expression: configuration.paymentCalculation,
+        submission,
+        formElements: definition.elements,
+        parseDayOnlyDate,
+      })
+    }
+    case 'FORM_ELEMENT':
+    default: {
+      if (!configuration.elementId) {
+        console.log(
+          'Form has a payment submission event but the amount configuration is missing, throwing error',
+        )
+        throw new Error(
+          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+        )
+      }
+
+      const amountElement = formElementsService.findFormElement(
+        definition.elements,
+        (element) => element.id === configuration.elementId,
+      )
+      if (!amountElement || amountElement.type === 'page') {
+        console.log(
+          'Form has a payment submission event but the amount element does not exist, throwing error',
+        )
+        throw new Error(
+          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+        )
+      }
+
+      console.log(
+        'Found form element for payment submission event',
+        amountElement,
+      )
+
+      return getRootElementValueById(
+        amountElement.id,
+        definition.elements,
+        submission,
       )
     }
-
-    console.log(
-      'Found form element for payment submission event',
-      amountElement,
-    )
-
-    return getRootElementValueById(
-      amountElement.id,
-      definition.elements,
-      submission,
-    )
   }
-
-  console.log(
-    'Form has a payment submission event but the amount configuration is missing, throwing error',
-  )
-  throw new Error(
-    'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
-  )
 }
 
 /**
