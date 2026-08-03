@@ -85,6 +85,25 @@ describe('checkForPaymentEvent', () => {
     })
   })
 
+  it('throws when elementId amount is present but not a number', () => {
+    expect(() =>
+      paymentService.checkForPaymentEvent({
+        definition: createForm({
+          type: 'CP_PAY',
+          configuration: {
+            amountType: 'FORM_ELEMENT',
+            elementId: amountElementId,
+            gatewayId: 'gateway-id',
+          },
+        }),
+        submission: { Amount: 'not-a-number' },
+        ...dateHelpers,
+      }),
+    ).toThrow(
+      '[PAYMENT_AMOUNT_NOT_NUMBER] The configuration required to make a payment is incorrect. Please contact your administrator to ensure your application configuration has been completed successfully.',
+    )
+  })
+
   it('resolves amount from paymentAmount', () => {
     const paymentSubmissionEvent: SubmissionEventTypes.FormPaymentEvent = {
       type: 'CP_PAY',
@@ -174,7 +193,41 @@ describe('checkForPaymentEvent', () => {
         ...dateHelpers,
       }),
     ).toThrow(
-      'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+      '[PAYMENT_EXPRESSION_MISSING_FORM_ELEMENTS] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+    )
+  })
+
+  it('throws when paymentCalculation omits the repeatableSet parent path', () => {
+    const itemsElement: FormTypes.RepeatableSetElement = {
+      id: 'items',
+      name: 'Items',
+      type: 'repeatableSet',
+      label: 'Items',
+      conditionallyShow: false,
+      requiresAllConditionallyShowPredicates: false,
+      elements: [amountElement],
+    }
+    expect(() =>
+      paymentService.checkForPaymentEvent({
+        definition: createForm(
+          {
+            type: 'CP_PAY',
+            configuration: {
+              amountType: 'EXPRESSION',
+              // Amount lives under Items; root {ELEMENT:Amount} is not a valid path
+              paymentCalculation: '{ELEMENT:Amount}',
+              gatewayId: 'gateway-id',
+            },
+          },
+          [itemsElement],
+        ),
+        // Submission also has no root Amount, which previously caused a silent
+        // MISSING_VALUES skip instead of a configuration error.
+        submission: {},
+        ...dateHelpers,
+      }),
+    ).toThrow(
+      '[PAYMENT_EXPRESSION_MISSING_FORM_ELEMENTS] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
     )
   })
 
@@ -207,7 +260,7 @@ describe('checkForPaymentEvent', () => {
         ...dateHelpers,
       }),
     ).toThrow(
-      'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+      '[PAYMENT_MISSING_ELEMENT_ID] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
     )
   })
 

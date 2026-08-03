@@ -2,6 +2,7 @@ import ExpressionParser from 'morph-expressions'
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import {
   findFormElement,
+  flattenFormElements,
   matchElementsTagRegex,
 } from './formElementsService.js'
 import {
@@ -51,8 +52,9 @@ function findFormElementByNamePath(
 
   for (let i = 0; i < parts.length; i++) {
     const name = parts[i]
-    found = findFormElement(
-      searchElements,
+    // Match flattenFormElements: page/section are transparent for naming, but
+    // form/repeatableSet/infoPage require an explicit parent path segment.
+    found = flattenFormElements(searchElements).find(
       (element) => 'name' in element && element.name === name,
     )
     if (!found) {

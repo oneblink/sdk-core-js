@@ -136,7 +136,7 @@ export function checkForPaymentEvent({
       'Form has a payment submission event but the amount is not a number, throwing error',
     )
     throw new Error(
-      'The configuration required to make a payment is incorrect. Please contact your administrator to ensure your application configuration has been completed successfully.',
+      '[PAYMENT_AMOUNT_NOT_NUMBER] The configuration required to make a payment is incorrect. Please contact your administrator to ensure your application configuration has been completed successfully.',
     )
   }
 
@@ -156,7 +156,7 @@ function resolvePaymentEventAmount({
   definition: FormTypes.Form
   submission: SubmissionTypes.S3SubmissionData['submission']
   parseDayOnlyDate: ParseDayOnlyDate
-}): number | undefined {
+}): unknown {
   switch (configuration.amountType) {
     case 'NUMBER': {
       console.log(
@@ -181,7 +181,7 @@ function resolvePaymentEventAmount({
           missingFormElementNames,
         )
         throw new Error(
-          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+          '[PAYMENT_EXPRESSION_MISSING_FORM_ELEMENTS] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
         )
       }
 
@@ -207,13 +207,13 @@ function resolvePaymentEventAmount({
             expressionResult,
           )
           throw new Error(
-            'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+            '[PAYMENT_INVALID_EXPRESSION] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
           )
         }
         default: {
           const neverResult: never = expressionResult
           throw new Error(
-            `Unexpected payment calculation result: ${JSON.stringify(neverResult)}`,
+            `[PAYMENT_UNEXPECTED_EXPRESSION_RESULT] Unexpected payment calculation result: ${JSON.stringify(neverResult)}`,
           )
         }
       }
@@ -225,7 +225,7 @@ function resolvePaymentEventAmount({
           'Form has a payment submission event but the amount configuration is missing, throwing error',
         )
         throw new Error(
-          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+          '[PAYMENT_MISSING_ELEMENT_ID] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
         )
       }
 
@@ -238,7 +238,7 @@ function resolvePaymentEventAmount({
           'Form has a payment submission event but the amount element does not exist, throwing error',
         )
         throw new Error(
-          'We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
+          '[PAYMENT_AMOUNT_ELEMENT_NOT_FOUND] We could not find the configuration required to make a payment. Please contact your administrator to ensure your application configuration has been completed successfully.',
         )
       }
 
@@ -247,15 +247,11 @@ function resolvePaymentEventAmount({
         amountElement,
       )
 
-      const amount = getRootElementValueById(
+      return getRootElementValueById(
         amountElement.id,
         definition.elements,
         submission,
       )
-
-      if (typeof amount === 'number' && !Number.isNaN(amount)) {
-        return amount
-      }
     }
   }
 }

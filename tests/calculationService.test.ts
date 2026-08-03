@@ -303,4 +303,89 @@ describe('findMissingFormElementsInExpression()', () => {
       }),
     ).toEqual(['Items|Amount'])
   })
+
+  test('treats elements inside repeatableSet as missing when the parent path is omitted', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Amount}',
+        formElements: [
+          {
+            id: 'items',
+            name: 'Items',
+            type: 'repeatableSet',
+            label: 'Items',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Amount')],
+          },
+        ],
+      }),
+    ).toEqual(['Amount'])
+  })
+
+  test('treats elements inside nested form as missing when the parent path is omitted', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Child}',
+        formElements: [
+          {
+            id: 'nested-form',
+            name: 'Nested',
+            type: 'form',
+            formId: 1,
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Child')],
+          },
+        ],
+      }),
+    ).toEqual(['Child'])
+  })
+
+  test('allows root references to elements inside page or section containers', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Amount}',
+        formElements: [
+          {
+            id: 'page-1',
+            type: 'page',
+            label: 'Page 1',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [
+              {
+                id: 'section-1',
+                type: 'section',
+                label: 'Section 1',
+                conditionallyShow: false,
+                requiresAllConditionallyShowPredicates: false,
+                isCollapsed: false,
+                elements: [createNumberElement('Amount')],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([])
+  })
+
+  test('resolves nested paths that correctly include the repeatableSet parent', () => {
+    expect(
+      findMissingFormElementsInExpression({
+        expression: '{ELEMENT:Items|Amount}',
+        formElements: [
+          {
+            id: 'items',
+            name: 'Items',
+            type: 'repeatableSet',
+            label: 'Items',
+            conditionallyShow: false,
+            requiresAllConditionallyShowPredicates: false,
+            elements: [createNumberElement('Amount')],
+          },
+        ],
+      }),
+    ).toEqual([])
+  })
 })
