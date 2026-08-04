@@ -17,6 +17,14 @@ declare module 'morph-expressions' {
   }
 
   export default class ExpressionParser<TScope = unknown> {
+    /**
+     * `morph-expressions` is CommonJS and assigns the constructor to
+     * `exports.default`. Node's CommonJS↔ESM interop exposes the whole
+     * `module.exports` as the default import, so the real constructor ends up
+     * nested on this property. Bundlers that honour `__esModule` unwrap it, in
+     * which case this is absent - hence it is optional.
+     */
+    static default?: typeof ExpressionParser
     registerFunction<TArgs extends unknown[]>(
       name: string,
       handler: FunctionHandler<TArgs>,
