@@ -14,7 +14,7 @@
     "@eslint/js": "^9.39.2",
     "@microsoft/eslint-plugin-sdl": "^1.1.0",
     "@microsoft/microsoft-graph-types": "^2.43.1",
-    "@oneblink/release-cli": "^4.0.0-beta.2",
+    "@oneblink/release-cli": "^5.0.1",
     "@oneblink/types": "github:oneblink/types",
     "@salesforce/types": "^1.6.0",
     "@spotto/contract": "^1.0.69-alpha.13",
@@ -64,12 +64,12 @@
     "format": "prettier --write .",
     "prepare": "npm run build",
     "pretest": "npm run fixpack && npm run eslint",
-    "release": "oneblink-release repository --no-name",
+    "release": "oneblink-release repository --no-name --update-dependents --force-update-dependency",
     "start": "tsc-watch",
     "test": "vitest run",
     "types": "npm install --save-dev github:oneblink/types",
     "typescript": "tsc --noEmit",
-    "update-dependents": "oneblink-release update-dependents --force"
+    "update-dependents": "oneblink-release update-dependents --force-update-dependency"
   },
   "type": "module"
 }

@@ -1,4 +1,7 @@
-import ExpressionParser from 'morph-expressions'
+import morphExpressions from 'morph-expressions'
+// morph-expressions is CommonJS and assigns `exports.default`, which Node's ESM
+// interop exposes as the whole `module.exports` rather than the constructor.
+const ExpressionParser = morphExpressions.default ?? morphExpressions
 import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import {
   findFormElement,
