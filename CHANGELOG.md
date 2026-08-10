@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- `formElementsService.injectFormElementsIntoForms()` which takes an array of forms and a `getForm(formId)` callback, mutates each form in place, and caches retrieved forms by id across the whole batch.
+
 ### Added
 
 - `paymentService.getFormStorePaymentFromFormSubmissionPayment()` to map a form submission payment to Form Store payment fields (`status`, `providerTransactionId`, `providerReceiptNumber`)

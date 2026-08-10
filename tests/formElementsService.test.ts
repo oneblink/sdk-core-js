@@ -4,6 +4,7 @@ import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import {
   findFormElement,
   injectFormElementsIntoForm,
+  injectFormElementsIntoForms,
 } from '../src/formElementsService'
 import { getRootElementValueById } from '../src/submissionService'
 import forms from './inject-forms-fixtures/valid-forms.json'
@@ -469,5 +470,146 @@ describe('injectFormElementsIntoForm()', () => {
           'Unable to display the embedded form for this element, as the form was not found. Please contact your Administrator.',
       },
     ])
+  })
+})
+
+describe('injectFormElementsIntoForms()', () => {
+  const getFormFrom =
+    (formsList: FormTypes.Form[]) => (formId: number) =>
+      formsList.find((candidate) => candidate.id === formId)
+
+  test('injects elements into a single form in place', async () => {
+    const testForms = _.cloneDeep(forms)
+
+    const form = testForms.forms[0]
+    await injectFormElementsIntoForms(
+      // @ts-expect-error ???
+      [form],
+      getFormFrom(testForms.forms),
+      true,
+    )
+    expect(form.elements).toEqual([
+      {
+        id: '1a',
+        name: 'heading',
+        type: 'heading',
+        label: 'Heading',
+      },
+      {
+        id: '1b',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 2,
+        elements: [
+          {
+            id: '2a',
+            name: 'text_1',
+            type: 'text',
+            label: 'text',
+          },
+          {
+            id: '2b',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 3,
+            elements: [
+              {
+                id: '3a',
+                name: 'text_1',
+                type: 'text',
+                label: 'text',
+                headingType: 1,
+              },
+              {
+                id: '3b',
+                name: 'text_2',
+                type: 'text',
+                label: 'text',
+              },
+            ],
+          },
+          {
+            id: '2c',
+            name: 'text_2',
+            type: 'text',
+            label: 'text',
+          },
+        ],
+      },
+      {
+        id: '1c',
+        name: 'repeatableSet',
+        type: 'repeatableSet',
+        label: 'Repeatable Set',
+        elements: [
+          {
+            id: '1c1',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: [
+              {
+                id: '2a',
+                name: 'text_1',
+                type: 'text',
+                label: 'text',
+              },
+              {
+                id: '2b',
+                name: 'form',
+                type: 'form',
+                label: 'form',
+                formId: 3,
+                elements: [
+                  {
+                    id: '3a',
+                    name: 'text_1',
+                    type: 'text',
+                    label: 'text',
+                    headingType: 1,
+                  },
+                  {
+                    id: '3b',
+                    name: 'text_2',
+                    type: 'text',
+                    label: 'text',
+                  },
+                ],
+              },
+              {
+                id: '2c',
+                name: 'text_2',
+                type: 'text',
+                label: 'text',
+              },
+            ],
+          },
+        ],
+      },
+    ])
+  })
+
+  test('retrieves each form id at most once via cache across multiple forms', async () => {
+    const testForms = _.cloneDeep(forms)
+    const formA = testForms.forms[0]
+    const formB = _.cloneDeep(testForms.forms[0])
+    formB.id = 100
+    const retrievedFormIds: number[] = []
+    const getForm = (formId: number) => {
+      retrievedFormIds.push(formId)
+      return testForms.forms.find((candidate) => candidate.id === formId)
+    }
+
+    await injectFormElementsIntoForms(
+      // @ts-expect-error ???
+      [formA, formB],
+      getForm,
+      true,
+    )
+
+    expect(retrievedFormIds).toEqual([2, 3])
   })
 })

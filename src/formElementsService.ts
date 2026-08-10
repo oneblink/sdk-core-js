@@ -310,12 +310,7 @@ function injectFormElements(
   injectAuthenticatedForms: boolean,
 ): FormTypes.FormElement[] {
   return elements.reduce<FormTypes.FormElement[]>((newElements, element) => {
-    if (
-      (element.type === 'page' ||
-        element.type === 'repeatableSet' ||
-        element.type === 'section') &&
-      Array.isArray(element.elements)
-    ) {
+    if ('elements' in element && Array.isArray(element.elements)) {
       const childElements = injectFormElements(
         element.elements,
         forms,
@@ -326,61 +321,194 @@ function injectFormElements(
     }
 
     if (element.type === 'form' || element.type === 'infoPage') {
-      const formToInject = forms.find((form) => element.formId === form.id)
-
-      if (!formToInject) {
-        const newElement: FormTypes.HtmlElement = {
-          ...element,
-          type: 'html',
-          name: 'Form_not_found',
-          label: 'Form not found.',
-          defaultValue:
-            'Unable to display the embedded form for this element, as the form was not found. Please contact your Administrator.',
-        }
-        newElements.push(newElement)
-        return newElements
-      }
-
-      if (formToInject.isAuthenticated && !injectAuthenticatedForms) {
-        console.log(
-          `No form elements injected for element id: ${element.id}, as request was unauthenticated and target form (form id: ${formToInject.id}) requires authentication.`,
-        )
-
-        const newElement: FormTypes.HtmlElement = {
-          ...element,
-          type: 'html',
-          name: 'Form_requires_authenticated',
-          label: 'Form Requires Authentication.',
-          defaultValue:
-            'Unable to display the embedded form for this element, as the form requires authentication. Please login and refresh to view this embedded form.',
-        }
-        newElements.push(newElement)
-        return newElements
-      }
-
-      const injectingParentForm =
-        parentIds && parentIds.find((id) => element.formId === id)
-
-      if (injectingParentForm) {
-        console.log(
-          `Infinite loop was detected while attempting to inject form id: ${injectingParentForm}. Ignoring elements...`,
-        )
-        return newElements
-      }
-
-      element.elements = injectFormElements(
-        formToInject.elements,
-        forms,
-        [...parentIds, formToInject.id],
+      const resolved = resolveEmbeddedFormElement(
+        element,
+        forms.find((form) => element.formId === form.id),
+        parentIds,
         injectAuthenticatedForms,
       )
-      newElements.push(element)
+
+      switch (resolved.type) {
+        case 'replace': {
+          newElements.push(resolved.element)
+          break
+        }
+        case 'skip': {
+          break
+        }
+        case 'continue': {
+          element.elements = injectFormElements(
+            resolved.form.elements,
+            forms,
+            [...parentIds, resolved.form.id],
+            injectAuthenticatedForms,
+          )
+          newElements.push(element)
+          break
+        }
+      }
     } else {
       newElements.push(element)
     }
 
     return newElements
   }, [])
+}
+
+type ResolveEmbeddedFormResult =
+  | { type: 'replace'; element: FormTypes.HtmlElement }
+  | { type: 'skip' }
+  | { type: 'continue'; form: FormTypes.Form }
+
+function resolveEmbeddedFormElement(
+  element: FormTypes.FormFormElement,
+  formToInject: FormTypes.Form | undefined,
+  parentIds: number[],
+  injectAuthenticatedForms: boolean,
+): ResolveEmbeddedFormResult {
+  if (!formToInject) {
+    return {
+      type: 'replace',
+      element: {
+        ...element,
+        type: 'html',
+        name: 'Form_not_found',
+        label: 'Form not found.',
+        defaultValue:
+          'Unable to display the embedded form for this element, as the form was not found. Please contact your Administrator.',
+      },
+    }
+  }
+
+  if (formToInject.isAuthenticated && !injectAuthenticatedForms) {
+    console.log(
+      `No form elements injected for element id: ${element.id}, as request was unauthenticated and target form (form id: ${formToInject.id}) requires authentication.`,
+    )
+
+    return {
+      type: 'replace',
+      element: {
+        ...element,
+        type: 'html',
+        name: 'Form_requires_authenticated',
+        label: 'Form Requires Authentication.',
+        defaultValue:
+          'Unable to display the embedded form for this element, as the form requires authentication. Please login and refresh to view this embedded form.',
+      },
+    }
+  }
+
+  const injectingParentForm = parentIds.find((id) => element.formId === id)
+
+  if (injectingParentForm) {
+    console.log(
+      `Infinite loop was detected while attempting to inject form id: ${injectingParentForm}. Ignoring elements...`,
+    )
+    return { type: 'skip' }
+  }
+
+  return { type: 'continue', form: formToInject }
+}
+
+/**
+ * Async counterpart to {@link injectFormElementsIntoForm}. Injects embedded
+ * `form` / `infoPage` elements for each form in `forms`. Uses `getForm` to load
+ * embedded forms and caches results by id for the duration of the call so each
+ * form is retrieved at most once across the whole batch.
+ *
+ * Mutates each form object in `forms` in place (the array entries are updated
+ * by reference); nothing is returned.
+ *
+ * @param forms The forms to inject elements into (mutated in place)
+ * @param getForm Retrieves a single form by id when it is referenced by a
+ *   `form` / `infoPage` element
+ * @param injectAuthenticatedForms Indicates whether forms requiring
+ *   authentication should be injected, defaults to true
+ */
+async function injectFormElementsIntoForms(
+  forms: FormTypes.Form[],
+  getForm: (
+    formId: number,
+  ) =>
+    | FormTypes.Form
+    | undefined
+    | void
+    | Promise<FormTypes.Form | undefined | void>,
+  injectAuthenticatedForms = true,
+): Promise<void> {
+  const formCache = new Map<number, FormTypes.Form | undefined>()
+
+  const getFormCached = async (formId: number) => {
+    if (formCache.has(formId)) {
+      return formCache.get(formId)
+    }
+    const retrieved = (await getForm(formId)) ?? undefined
+    formCache.set(formId, retrieved)
+    return retrieved
+  }
+
+  for (const form of forms) {
+    form.elements = await injectFormElementsAsync(
+      form.elements,
+      getFormCached,
+      [form.id],
+      injectAuthenticatedForms,
+    )
+  }
+}
+
+async function injectFormElementsAsync(
+  elements: FormTypes.FormElement[],
+  getForm: (formId: number) => Promise<FormTypes.Form | undefined>,
+  parentIds: number[],
+  injectAuthenticatedForms: boolean,
+): Promise<FormTypes.FormElement[]> {
+  const newElements: FormTypes.FormElement[] = []
+
+  for (const element of elements) {
+    if ('elements' in element && Array.isArray(element.elements)) {
+      element.elements = await injectFormElementsAsync(
+        element.elements,
+        getForm,
+        parentIds,
+        injectAuthenticatedForms,
+      )
+    }
+
+    if (element.type === 'form' || element.type === 'infoPage') {
+      const form = await getForm(element.formId)
+      const resolved = resolveEmbeddedFormElement(
+        element,
+        form,
+        parentIds,
+        injectAuthenticatedForms,
+      )
+
+      switch (resolved.type) {
+        case 'replace': {
+          newElements.push(resolved.element)
+          break
+        }
+        case 'skip': {
+          break
+        }
+        case 'continue': {
+          element.elements = await injectFormElementsAsync(
+            resolved.form.elements,
+            getForm,
+            [...parentIds, resolved.form.id],
+            injectAuthenticatedForms,
+          )
+          newElements.push(element)
+          break
+        }
+      }
+    } else {
+      newElements.push(element)
+    }
+  }
+
+  return newElements
 }
 
 export {
@@ -392,4 +520,5 @@ export {
   determineIsInfoPage,
   fixElementName,
   injectFormElementsIntoForm,
+  injectFormElementsIntoForms,
 }
