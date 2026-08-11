@@ -731,4 +731,78 @@ describe('injectFormElementsIntoForms()', () => {
 
     expect(retrievedFormIds).toEqual([2, 3])
   })
+
+  test('does not mutate cached getForm forms used later as batch roots', async () => {
+    // A embeds B; B has a page containing a form→A (cycle when embedded under A).
+    // Injecting A must not walk B in place and drop the cycle edge, or B as a
+    // later root would lose nested elements.
+    const formA = {
+      id: 1,
+      isAuthenticated: false,
+      elements: [
+        {
+          id: 'a-to-b',
+          name: 'form',
+          type: 'form',
+          label: 'form',
+          formId: 2,
+        },
+      ],
+    }
+    const formB = {
+      id: 2,
+      isAuthenticated: false,
+      elements: [
+        {
+          id: 'b-page',
+          name: 'page',
+          type: 'page',
+          label: 'Page',
+          elements: [
+            {
+              id: 'b-to-a',
+              name: 'form',
+              type: 'form',
+              label: 'form',
+              formId: 1,
+            },
+            {
+              id: 'b-keep',
+              name: 'keep',
+              type: 'text',
+              label: 'Keep',
+            },
+          ],
+        },
+      ],
+    }
+
+    const getForm = async (formId: number) => {
+      if (formId === 1) return formA as FormTypes.Form
+      if (formId === 2) return formB as FormTypes.Form
+      return undefined
+    }
+
+    await injectFormElementsIntoForms([formA as FormTypes.Form], getForm, true)
+
+    // B's definition is unchanged after being embedded under A
+    expect(formB.elements[0]).toMatchObject({
+      id: 'b-page',
+      type: 'page',
+      elements: [
+        { id: 'b-to-a', type: 'form', formId: 1 },
+        { id: 'b-keep', type: 'text' },
+      ],
+    })
+
+    await injectFormElementsIntoForms([formB as FormTypes.Form], getForm, true)
+
+    // B as root still sees its cycle edge and injects A under it (A→B then
+    // cycle-skips, so the embedded form has empty elements).
+    const bToA = (
+      formB.elements[0] as FormTypes.PageElement
+    ).elements?.[0] as FormTypes.FormFormElement
+    expect(bToA).toMatchObject({ id: 'b-to-a', type: 'form', formId: 1 })
+    expect(bToA.elements).toEqual([])
+  })
 })

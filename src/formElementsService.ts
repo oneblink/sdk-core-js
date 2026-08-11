@@ -342,8 +342,11 @@ function injectFormElements(
           break
         }
         case 'continue': {
+          // Clone so inject mutations (e.g. containers rewritten when cycle
+          // edges are omitted) do not alter the source form, which may be
+          // shared via the forms list.
           element.elements = injectFormElements(
-            resolved.form.elements,
+            structuredClone(resolved.form.elements),
             forms,
             [...parentIds, resolved.form.id],
             injectAuthenticatedForms,
@@ -422,7 +425,8 @@ function resolveEmbeddedFormElement(
  * form is retrieved at most once across the whole batch.
  *
  * Mutates each form object in `forms` in place (the array entries are updated
- * by reference); nothing is returned.
+ * by reference); nothing is returned. Forms returned from `getForm` are not
+ * mutated — their element trees are cloned before embedding.
  *
  * @param forms The forms to inject elements into (mutated in place)
  * @param getForm Retrieves a single form by id when it is referenced by a
@@ -497,8 +501,11 @@ async function injectFormElementsAsync(
           break
         }
         case 'continue': {
+          // Clone so inject mutations (e.g. containers rewritten when cycle
+          // edges are omitted) do not alter the source form, which may be
+          // cached or a later batch root.
           element.elements = await injectFormElementsAsync(
-            resolved.form.elements,
+            structuredClone(resolved.form.elements),
             getForm,
             [...parentIds, resolved.form.id],
             injectAuthenticatedForms,
