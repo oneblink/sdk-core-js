@@ -471,6 +471,125 @@ describe('injectFormElementsIntoForm()', () => {
       },
     ])
   })
+
+  test('does not pre-walk stub elements on form embeds before injecting', () => {
+    const injectedElements = [
+      {
+        id: 'from-injected',
+        name: 'from_injected',
+        type: 'text',
+        label: 'From Injected',
+      },
+    ]
+    const stubElements = [
+      {
+        id: 'from-stub',
+        name: 'from_stub',
+        type: 'text',
+        label: 'From Stub',
+      },
+    ]
+    const formsList = [
+      {
+        id: 1,
+        isAuthenticated: false,
+        elements: [
+          {
+            id: 'embed',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: stubElements,
+          },
+        ],
+      },
+      {
+        id: 2,
+        isAuthenticated: false,
+        elements: injectedElements,
+      },
+    ]
+
+    const result = injectFormElementsIntoForm(
+      // @ts-expect-error incomplete form fixture
+      formsList[0],
+      // @ts-expect-error incomplete form fixture
+      formsList,
+      true,
+    )
+
+    expect(result[0]).toMatchObject({
+      id: 'embed',
+      type: 'form',
+      formId: 2,
+      elements: injectedElements,
+    })
+    expect(formsList[1].elements).toEqual(injectedElements)
+  })
+
+  test('uses correct parentIds for cycle detection when form embeds have stub elements', () => {
+    // A embeds B; B embeds C; C embeds B (cycle). Stub on A's embed shares B's tree.
+    // Pre-walking that stub with parentIds=[A] (missing B) would fail to detect C→B
+    // as a cycle and re-inject B.
+    const formCElements = [
+      {
+        id: 'c-back-to-b',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 2,
+      },
+    ]
+    const formBElements = [
+      {
+        id: 'b-to-c',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 3,
+      },
+    ]
+    const formsList = [
+      {
+        id: 1,
+        isAuthenticated: false,
+        elements: [
+          {
+            id: 'a-to-b',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: formBElements,
+          },
+        ],
+      },
+      {
+        id: 2,
+        isAuthenticated: false,
+        elements: formBElements,
+      },
+      {
+        id: 3,
+        isAuthenticated: false,
+        elements: formCElements,
+      },
+    ]
+
+    const result = injectFormElementsIntoForm(
+      // @ts-expect-error incomplete form fixture
+      formsList[0],
+      // @ts-expect-error incomplete form fixture
+      formsList,
+      true,
+    )
+
+    const embedB = result[0] as FormTypes.FormFormElement
+    const embedC = embedB.elements?.[0] as FormTypes.FormFormElement
+    // C→B is a cycle once B is on the parent chain, so it must be skipped
+    expect(embedC.elements).toEqual([])
+  })
 })
 
 describe('injectFormElementsIntoForms()', () => {

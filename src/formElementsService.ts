@@ -310,7 +310,12 @@ function injectFormElements(
   injectAuthenticatedForms: boolean,
 ): FormTypes.FormElement[] {
   return elements.reduce<FormTypes.FormElement[]>((newElements, element) => {
-    if ('elements' in element && Array.isArray(element.elements)) {
+    if (
+      (element.type === 'page' ||
+        element.type === 'repeatableSet' ||
+        element.type === 'section') &&
+      Array.isArray(element.elements)
+    ) {
       const childElements = injectFormElements(
         element.elements,
         forms,
@@ -427,13 +432,7 @@ function resolveEmbeddedFormElement(
  */
 async function injectFormElementsIntoForms(
   forms: FormTypes.Form[],
-  getForm: (
-    formId: number,
-  ) =>
-    | FormTypes.Form
-    | undefined
-    | void
-    | Promise<FormTypes.Form | undefined | void>,
+  getForm: (formId: number) => Promise<FormTypes.Form | undefined>,
   injectAuthenticatedForms = true,
 ): Promise<void> {
   const formCache = new Map<number, FormTypes.Form | undefined>()
@@ -466,7 +465,12 @@ async function injectFormElementsAsync(
   const newElements: FormTypes.FormElement[] = []
 
   for (const element of elements) {
-    if ('elements' in element && Array.isArray(element.elements)) {
+    if (
+      (element.type === 'page' ||
+        element.type === 'repeatableSet' ||
+        element.type === 'section') &&
+      Array.isArray(element.elements)
+    ) {
       element.elements = await injectFormElementsAsync(
         element.elements,
         getForm,
