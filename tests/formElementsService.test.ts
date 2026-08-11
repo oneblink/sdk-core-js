@@ -4,6 +4,7 @@ import { FormTypes, SubmissionTypes } from '@oneblink/types'
 import {
   findFormElement,
   injectFormElementsIntoForm,
+  injectFormElementsIntoForms,
 } from '../src/formElementsService'
 import { getRootElementValueById } from '../src/submissionService'
 import forms from './inject-forms-fixtures/valid-forms.json'
@@ -469,5 +470,339 @@ describe('injectFormElementsIntoForm()', () => {
           'Unable to display the embedded form for this element, as the form was not found. Please contact your Administrator.',
       },
     ])
+  })
+
+  test('does not pre-walk stub elements on form embeds before injecting', () => {
+    const injectedElements = [
+      {
+        id: 'from-injected',
+        name: 'from_injected',
+        type: 'text',
+        label: 'From Injected',
+      },
+    ]
+    const stubElements = [
+      {
+        id: 'from-stub',
+        name: 'from_stub',
+        type: 'text',
+        label: 'From Stub',
+      },
+    ]
+    const formsList = [
+      {
+        id: 1,
+        isAuthenticated: false,
+        elements: [
+          {
+            id: 'embed',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: stubElements,
+          },
+        ],
+      },
+      {
+        id: 2,
+        isAuthenticated: false,
+        elements: injectedElements,
+      },
+    ]
+
+    const result = injectFormElementsIntoForm(
+      // @ts-expect-error incomplete form fixture
+      formsList[0],
+      // @ts-expect-error incomplete form fixture
+      formsList,
+      true,
+    )
+
+    expect(result[0]).toMatchObject({
+      id: 'embed',
+      type: 'form',
+      formId: 2,
+      elements: injectedElements,
+    })
+    expect(formsList[1].elements).toEqual(injectedElements)
+  })
+
+  test('uses correct parentIds for cycle detection when form embeds have stub elements', () => {
+    // A embeds B; B embeds C; C embeds B (cycle). Stub on A's embed shares B's tree.
+    // Pre-walking that stub with parentIds=[A] (missing B) would fail to detect C→B
+    // as a cycle and re-inject B.
+    const formCElements = [
+      {
+        id: 'c-back-to-b',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 2,
+      },
+    ]
+    const formBElements = [
+      {
+        id: 'b-to-c',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 3,
+      },
+    ]
+    const formsList = [
+      {
+        id: 1,
+        isAuthenticated: false,
+        elements: [
+          {
+            id: 'a-to-b',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: formBElements,
+          },
+        ],
+      },
+      {
+        id: 2,
+        isAuthenticated: false,
+        elements: formBElements,
+      },
+      {
+        id: 3,
+        isAuthenticated: false,
+        elements: formCElements,
+      },
+    ]
+
+    const result = injectFormElementsIntoForm(
+      // @ts-expect-error incomplete form fixture
+      formsList[0],
+      // @ts-expect-error incomplete form fixture
+      formsList,
+      true,
+    )
+
+    const embedB = result[0] as FormTypes.FormFormElement
+    const embedC = embedB.elements?.[0] as FormTypes.FormFormElement
+    // C→B is a cycle once B is on the parent chain, so it must be skipped
+    expect(embedC.elements).toEqual([])
+  })
+})
+
+describe('injectFormElementsIntoForms()', () => {
+  const getFormFrom =
+    (formsList: FormTypes.Form[]) => (formId: number) =>
+      formsList.find((candidate) => candidate.id === formId)
+
+  test('injects elements into a single form in place', async () => {
+    const testForms = _.cloneDeep(forms)
+
+    const form = testForms.forms[0]
+    await injectFormElementsIntoForms(
+      // @ts-expect-error ???
+      [form],
+      getFormFrom(testForms.forms),
+      true,
+    )
+    expect(form.elements).toEqual([
+      {
+        id: '1a',
+        name: 'heading',
+        type: 'heading',
+        label: 'Heading',
+      },
+      {
+        id: '1b',
+        name: 'form',
+        type: 'form',
+        label: 'form',
+        formId: 2,
+        elements: [
+          {
+            id: '2a',
+            name: 'text_1',
+            type: 'text',
+            label: 'text',
+          },
+          {
+            id: '2b',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 3,
+            elements: [
+              {
+                id: '3a',
+                name: 'text_1',
+                type: 'text',
+                label: 'text',
+                headingType: 1,
+              },
+              {
+                id: '3b',
+                name: 'text_2',
+                type: 'text',
+                label: 'text',
+              },
+            ],
+          },
+          {
+            id: '2c',
+            name: 'text_2',
+            type: 'text',
+            label: 'text',
+          },
+        ],
+      },
+      {
+        id: '1c',
+        name: 'repeatableSet',
+        type: 'repeatableSet',
+        label: 'Repeatable Set',
+        elements: [
+          {
+            id: '1c1',
+            name: 'form',
+            type: 'form',
+            label: 'form',
+            formId: 2,
+            elements: [
+              {
+                id: '2a',
+                name: 'text_1',
+                type: 'text',
+                label: 'text',
+              },
+              {
+                id: '2b',
+                name: 'form',
+                type: 'form',
+                label: 'form',
+                formId: 3,
+                elements: [
+                  {
+                    id: '3a',
+                    name: 'text_1',
+                    type: 'text',
+                    label: 'text',
+                    headingType: 1,
+                  },
+                  {
+                    id: '3b',
+                    name: 'text_2',
+                    type: 'text',
+                    label: 'text',
+                  },
+                ],
+              },
+              {
+                id: '2c',
+                name: 'text_2',
+                type: 'text',
+                label: 'text',
+              },
+            ],
+          },
+        ],
+      },
+    ])
+  })
+
+  test('retrieves each form id at most once via cache across multiple forms', async () => {
+    const testForms = _.cloneDeep(forms)
+    const formA = testForms.forms[0]
+    const formB = _.cloneDeep(testForms.forms[0])
+    formB.id = 100
+    const retrievedFormIds: number[] = []
+    const getForm = (formId: number) => {
+      retrievedFormIds.push(formId)
+      return testForms.forms.find((candidate) => candidate.id === formId)
+    }
+
+    await injectFormElementsIntoForms(
+      // @ts-expect-error ???
+      [formA, formB],
+      getForm,
+      true,
+    )
+
+    expect(retrievedFormIds).toEqual([2, 3])
+  })
+
+  test('does not mutate cached getForm forms used later as batch roots', async () => {
+    // A embeds B; B has a page containing a form→A (cycle when embedded under A).
+    // Injecting A must not walk B in place and drop the cycle edge, or B as a
+    // later root would lose nested elements.
+    const formA = {
+      id: 1,
+      isAuthenticated: false,
+      elements: [
+        {
+          id: 'a-to-b',
+          name: 'form',
+          type: 'form',
+          label: 'form',
+          formId: 2,
+        },
+      ],
+    }
+    const formB = {
+      id: 2,
+      isAuthenticated: false,
+      elements: [
+        {
+          id: 'b-page',
+          name: 'page',
+          type: 'page',
+          label: 'Page',
+          elements: [
+            {
+              id: 'b-to-a',
+              name: 'form',
+              type: 'form',
+              label: 'form',
+              formId: 1,
+            },
+            {
+              id: 'b-keep',
+              name: 'keep',
+              type: 'text',
+              label: 'Keep',
+            },
+          ],
+        },
+      ],
+    }
+
+    const getForm = async (formId: number) => {
+      if (formId === 1) return formA as FormTypes.Form
+      if (formId === 2) return formB as FormTypes.Form
+      return undefined
+    }
+
+    await injectFormElementsIntoForms([formA as FormTypes.Form], getForm, true)
+
+    // B's definition is unchanged after being embedded under A
+    expect(formB.elements[0]).toMatchObject({
+      id: 'b-page',
+      type: 'page',
+      elements: [
+        { id: 'b-to-a', type: 'form', formId: 1 },
+        { id: 'b-keep', type: 'text' },
+      ],
+    })
+
+    await injectFormElementsIntoForms([formB as FormTypes.Form], getForm, true)
+
+    // B as root still sees its cycle edge and injects A under it (A→B then
+    // cycle-skips, so the embedded form has empty elements).
+    const bToA = (
+      formB.elements[0] as FormTypes.PageElement
+    ).elements?.[0] as FormTypes.FormFormElement
+    expect(bToA).toMatchObject({ id: 'b-to-a', type: 'form', formId: 1 })
+    expect(bToA.elements).toEqual([])
   })
 })
