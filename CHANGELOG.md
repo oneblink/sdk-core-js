@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [10.1.0] - 2026-08-26
+
 ### Added
 
 - `formElementsService.injectFormElementsIntoForms()` which takes an array of forms and a `getForm(formId)` callback, mutates each form in place, and caches retrieved forms by id across the whole batch.
@@ -18,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - `paymentService.checkForPaymentEvent()` now resolves payment amounts from all `FormPaymentEventAmountConfiguration` options: `elementId` (form element value), `paymentAmount` (fixed amount), and `paymentCalculation` (calculation expression via `calculationService`). For `EXPRESSION` amounts: missing referenced form elements or an invalid expression throw a configuration error; missing submission values skip payment (same as an empty/zero amount).
+
+### Dependencies
+
+- depend upon morph-expressions 1.1.1
 
 ## [10.0.0] - 2026-07-28
 
