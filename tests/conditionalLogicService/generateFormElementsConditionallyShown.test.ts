@@ -463,4 +463,113 @@ describe('generateFormElementsConditionallyShown', () => {
       isHidden: true,
     })
   })
+
+  test('should evaluate pages chained by conditional logic', () => {
+    // Each page is shown based on a checkbox on the previous page, which is in
+    // turn shown based on a number on that page.
+    const pageCount = 25
+    const formElements: FormElement[] = Array.from(
+      { length: pageCount },
+      (_, index): FormElement => ({
+        id: `page_${index}`,
+        type: 'page',
+        label: `Page ${index}`,
+        conditionallyShow: index > 0,
+        requiresAllConditionallyShowPredicates: false,
+        conditionallyShowPredicates:
+          index > 0
+            ? [
+                {
+                  type: 'OPTIONS',
+                  elementId: `more_top_${index - 1}`,
+                  optionIds: [`more_top_option_${index - 1}`],
+                },
+                {
+                  type: 'OPTIONS',
+                  elementId: `more_bottom_${index - 1}`,
+                  optionIds: [`more_bottom_option_${index - 1}`],
+                },
+              ]
+            : undefined,
+        elements: [
+          {
+            id: `count_${index}`,
+            name: `count_${index}`,
+            type: 'number',
+            label: 'Count',
+            required: false,
+            readOnly: false,
+            isSlider: false,
+            isDataLookup: false,
+            isElementLookup: false,
+            conditionallyShow: false,
+          },
+          ...(['top', 'bottom'] as const).map(
+            (position): FormElement => ({
+              id: `more_${position}_${index}`,
+              name: `more_${position}_${index}`,
+              type: 'checkboxes',
+              label: 'More',
+              required: false,
+              readOnly: false,
+              buttons: true,
+              optionsType: 'CUSTOM',
+              canToggleAll: false,
+              isDataLookup: false,
+              isElementLookup: false,
+              conditionallyShowOptions: false,
+              options: [
+                {
+                  id: `more_${position}_option_${index}`,
+                  label: 'More',
+                  value: 'more',
+                },
+              ],
+              conditionallyShow: true,
+              requiresAllConditionallyShowPredicates: false,
+              conditionallyShowPredicates: [
+                {
+                  type: 'NUMERIC',
+                  elementId: `count_${index}`,
+                  operator: '===',
+                  compareWith: 'VALUE',
+                  value: 10,
+                },
+              ],
+            }),
+          ),
+        ],
+      }),
+    )
+
+    const submission: Record<string, unknown> = {}
+    for (let index = 0; index < pageCount; index++) {
+      submission[`count_${index}`] = 10
+      submission[`more_bottom_${index}`] = ['more']
+    }
+
+    const allPagesResult = generateFormElementsConditionallyShown({
+      formElements,
+      submission,
+    })
+    expect(
+      allPagesResult.formElementsConditionallyShown[`page_${pageCount - 1}`],
+    ).toEqual({ type: 'formElement', isHidden: false })
+
+    const brokenChainResult = generateFormElementsConditionallyShown({
+      formElements,
+      submission: { ...submission, count_10: 9 },
+    })
+    expect(brokenChainResult.formElementsConditionallyShown.page_10).toEqual({
+      type: 'formElement',
+      isHidden: false,
+    })
+    expect(brokenChainResult.formElementsConditionallyShown.page_11).toEqual({
+      type: 'formElement',
+      isHidden: true,
+    })
+    expect(
+      brokenChainResult.formElementsConditionallyShown[`page_${pageCount - 1}`],
+    ).toEqual({ type: 'formElement', isHidden: true })
+  })
 })
