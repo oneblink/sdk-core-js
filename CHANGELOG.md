@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- `conditionalLogicService.generateFormElementsConditionallyShown()` caches element results during evaluation so forms with pages chained by conditional logic no longer take exponentially longer to evaluate as pages are added
+
 ## [10.1.1] - 2026-10-01
 
 ## [10.1.0] - 2026-08-26

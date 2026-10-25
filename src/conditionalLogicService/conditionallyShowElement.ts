@@ -2,20 +2,45 @@ import { FormTypes, ConditionTypes } from '@oneblink/types'
 import { FormElementsCtrl } from './types.js'
 import evaluateFormElementConditionalPredicate from './evaluateFormElementConditionalPredicate.js'
 
+// A `FormElementsCtrl` is never mutated after it is created, so results can be
+// cached against it. Without caching, forms that chain pages together (e.g.
+// page N is shown based on an element on page N - 1) re-evaluate every previous
+// page for each predicate, which grows exponentially with the number of pages.
+const parentElementsCache = new WeakMap<
+  FormElementsCtrl,
+  Map<string, FormTypes.SectionElement | FormTypes.PageElement>
+>()
+const conditionallyShownCache = new WeakMap<
+  FormElementsCtrl,
+  Map<FormTypes.FormElement, boolean>
+>()
+
+const getParentElementsById = (formElementsCtrl: FormElementsCtrl) => {
+  let parentElementsById = parentElementsCache.get(formElementsCtrl)
+  if (!parentElementsById) {
+    parentElementsById = new Map()
+    for (const element of formElementsCtrl.flattenedElements) {
+      if (element.type === 'page' || element.type === 'section') {
+        for (const { id } of element.elements) {
+          if (!parentElementsById.has(id)) {
+            parentElementsById.set(id, element)
+          }
+        }
+      }
+    }
+    parentElementsCache.set(formElementsCtrl, parentElementsById)
+  }
+  return parentElementsById
+}
+
 const getParentFormElements = (
   formElementsCtrl: FormElementsCtrl,
   childElement: FormTypes.FormElement,
 ): Array<FormTypes.SectionElement | FormTypes.PageElement> => {
-  const parentElement = formElementsCtrl.flattenedElements.find((element) => {
-    return (
-      (element.type === 'page' || element.type === 'section') &&
-      element.elements.some(({ id }) => id === childElement.id)
-    )
-  })
-  if (
-    parentElement &&
-    (parentElement.type === 'page' || parentElement.type === 'section')
-  ) {
+  const parentElement = getParentElementsById(formElementsCtrl).get(
+    childElement.id,
+  )
+  if (parentElement) {
     return [
       parentElement,
       ...getParentFormElements(formElementsCtrl, parentElement),
@@ -92,6 +117,17 @@ export default function conditionallyShowElement({
   const conditionallyShowPredicates =
     elementToEvaluate.conditionallyShowPredicates
 
+  let conditionallyShownByElement =
+    conditionallyShownCache.get(formElementsCtrl)
+  if (!conditionallyShownByElement) {
+    conditionallyShownByElement = new Map()
+    conditionallyShownCache.set(formElementsCtrl, conditionallyShownByElement)
+  }
+  const cachedResult = conditionallyShownByElement.get(elementToEvaluate)
+  if (cachedResult !== undefined) {
+    return cachedResult
+  }
+
   // Check to see if this element has already been used to evaluate
   // if the element should be shown based on parent element conditional logic
   const elementAlreadyEvaluated = elementsEvaluated.find(
@@ -124,9 +160,9 @@ export default function conditionallyShowElement({
     })
   }
 
-  if (elementToEvaluate.requiresAllConditionallyShowPredicates) {
-    return conditionallyShowPredicates.every(predicateFunction)
-  } else {
-    return conditionallyShowPredicates.some(predicateFunction)
-  }
+  const result = elementToEvaluate.requiresAllConditionallyShowPredicates
+    ? conditionallyShowPredicates.every(predicateFunction)
+    : conditionallyShowPredicates.some(predicateFunction)
+  conditionallyShownByElement.set(elementToEvaluate, result)
+  return result
 }
