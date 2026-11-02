@@ -29,14 +29,6 @@ const isObjectWithValue = (obj: unknown): obj is { value: unknown } => {
 }
 
 /**
- * Escape special RegExp characters in a string so it can be used as a literal
- * pattern.
- */
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/**
  * Workaround for `.toFixed()` not rounding floating point numbers correctly.
  */
 function roundToFixed(number: number, decimals: number) {
@@ -53,8 +45,7 @@ function findFormElementByNamePath(
   let searchElements = formElements
   let found: FormTypes.FormElement | undefined
 
-  for (let i = 0; i < parts.length; i++) {
-    const name = parts[i]
+  for (const [i, name] of parts.entries()) {
     // Match flattenFormElements: page/section are transparent for naming, but
     // form/repeatableSet/infoPage require an explicit parent path segment.
     found = flattenFormElements(searchElements).find(
@@ -182,6 +173,7 @@ function resolveElementValue({
         const nestedElementValues = elementValue.reduce(
           (nestedElementValues, entry) => {
             if (entry) {
+              // eslint-disable-next-line security/detect-object-injection -- key is a form element name
               const nextElementValue = entry[nextElementName]
               if (Array.isArray(nextElementValue)) {
                 if (nextElementValue.length) {
@@ -225,10 +217,11 @@ function resolveElementValue({
       if (typeof elementValue === 'object') {
         const formFormElement = findFormElement(
           formElements,
-          (e) => e.type === 'form' && e.name === nestedElementNames[index],
+          (e) => e.type === 'form' && e.name === nestedElementNames.at(index),
         )
         const nextElementName = nestedElementNames[index + 1]
         if (formFormElement && nextElementName) {
+          // eslint-disable-next-line security/detect-object-injection -- key is a form element name
           return (elementValue as Record<string, unknown>)[nextElementName]
         }
       }
@@ -440,7 +433,6 @@ export function evaluateExpression({
   )
 
   const code = elementNames.reduce((code, elementName, index) => {
-    const regex = new RegExp(escapeRegExp(`{ELEMENT:${elementName}}`), 'g')
     const replacement = `a${index}`
     exprParser.registerProperty(
       replacement,
@@ -452,7 +444,7 @@ export function evaluateExpression({
           parseDayOnlyDate,
         }),
     )
-    return code.replace(regex, replacement)
+    return code.replaceAll(`{ELEMENT:${elementName}}`, replacement)
   }, expression)
 
   let parsed

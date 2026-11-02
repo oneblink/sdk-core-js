@@ -239,9 +239,8 @@ export default function conditionallyShowOption({
 
   let isLoadingDynamicDEPENDENCY = false
   let isLoadingStaticDEPENDENCY = false
-  const showResults = Array(validPredicates.length).fill(false)
-  for (let i = 0; i < validPredicates.length; i++) {
-    const predicate = validPredicates[i]
+  let showCount = 0
+  for (const predicate of validPredicates) {
     const predicateResult = conditionallyShowOptionByPredicate({
       formElementsCtrl,
       predicate,
@@ -250,7 +249,7 @@ export default function conditionallyShowOption({
     switch (predicateResult) {
       case 'SHOW': {
         if (elementToEvaluate.requiresAllConditionallyShowOptionsPredicates) {
-          showResults[i] = true
+          showCount++
           break
         }
         // if match any return show
@@ -268,7 +267,7 @@ export default function conditionallyShowOption({
   }
   if (
     elementToEvaluate.requiresAllConditionallyShowOptionsPredicates &&
-    showResults.every((result) => result)
+    showCount === validPredicates.length
   ) {
     return 'SHOW'
   }
