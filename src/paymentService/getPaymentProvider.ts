@@ -24,5 +24,6 @@ const paymentProvidersMap: Record<
 export default function getPaymentProvider(
   type: SubmissionTypes.FormSubmissionPayment['type'],
 ): PaymentProvider<SubmissionTypes.FormSubmissionPayment> {
+  // eslint-disable-next-line security/detect-object-injection -- type is a typed payment type union
   return paymentProvidersMap[type]
 }

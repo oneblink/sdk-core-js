@@ -295,6 +295,7 @@ function getElementSubmissionValueByName({
 }):
   | { formElement: FormTypes.FormElement | undefined; unknownValue: unknown }
   | undefined {
+  // eslint-disable-next-line security/detect-object-injection -- key is a form element name
   const unknownValue = submission[propertyName]
   if (unknownValue === undefined || unknownValue === null) {
     return undefined
@@ -993,6 +994,7 @@ export function processInjectablesInCustomResource<T>({
     matches.forEach((hasNestedFormElements, repeatableSetElementName) => {
       if (hasNestedFormElements) {
         // Attempt to create a new resource for each entry in the repeatable set.
+        // eslint-disable-next-line security/detect-object-injection -- key is a form element name
         const entries = submission?.[repeatableSetElementName]
         if (Array.isArray(entries)) {
           const repeatableSetElement = findFormElement(
@@ -1058,6 +1060,7 @@ export function processInjectablesInCustomResource<T>({
     valueMatches.forEach((hasNestedFormElements, repeatableSetElementName) => {
       if (hasNestedFormElements) {
         // Attempt to create a new resource for each entry in the repeatable set.
+        // eslint-disable-next-line security/detect-object-injection -- key is a form element name
         const entries = submission?.[repeatableSetElementName]
         if (Array.isArray(entries)) {
           const repeatableSetElement = findFormElement(

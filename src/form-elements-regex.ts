@@ -100,6 +100,7 @@ export function matchElementsTagRegex(
       : NestedElementRegex
   // Fresh RegExp per call so re-entrant matchElementsTagRegex (and concurrent
   // callers) do not share mutable lastIndex on the exported /g patterns.
+  // eslint-disable-next-line security/detect-non-literal-regexp -- clones one of the static literal regexes above
   const regex = new RegExp(regexTemplate.source, regexTemplate.flags)
   while ((matches = regex.exec(text)) !== null) {
     if (matches?.length < 3) continue
