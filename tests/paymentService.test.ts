@@ -493,6 +493,146 @@ describe('getDisplayDetailsFromFormSubmissionPayment', () => {
   })
 })
 
+describe('getFailureDetailsFromFormSubmissionPayment', () => {
+  it('returns nothing unless the payment failed', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'BPOINT',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'SUCCEEDED',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+      }),
+    ).toEqual([])
+  })
+
+  it('returns the stored message and BPOINT response', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'BPOINT',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        message: 'The card was declined.',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+        // @ts-expect-error incomplete because type is large
+        paymentTransaction: {
+          ResponseText: 'Declined',
+          ResponseCode: '1',
+        },
+      }),
+    ).toEqual([
+      { key: 'MESSAGE', label: 'Message', value: 'The card was declined.' },
+      { key: 'BPOINT_RESPONSE_TEXT', label: 'Response', value: 'Declined' },
+      { key: 'BPOINT_RESPONSE_CODE', label: 'Response Code', value: '1' },
+    ])
+  })
+
+  it('returns the Westpac QuickStream response', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'WESTPAC_QUICK_STREAM',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+        // @ts-expect-error incomplete because type is large
+        paymentTransaction: {
+          responseDescription: 'Declined',
+          responseCode: '05',
+        },
+      }),
+    ).toEqual([
+      {
+        key: 'WESTPAC_QUICK_STREAM_RESPONSE_DESCRIPTION',
+        label: 'Response',
+        value: 'Declined',
+      },
+      {
+        key: 'WESTPAC_QUICK_STREAM_RESPONSE_CODE',
+        label: 'Response Code',
+        value: '05',
+      },
+    ])
+  })
+
+  it('returns the CivicPlus Pay v1 error', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'CP_PAY',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+        // @ts-expect-error incomplete because type is large
+        paymentTransaction: {
+          errorMessage: 'Card declined',
+          errorCode: 2001,
+        },
+      }),
+    ).toEqual([
+      {
+        key: 'CP_PAY_ERROR_MESSAGE',
+        label: 'Response',
+        value: 'Card declined',
+      },
+      { key: 'CP_PAY_ERROR_CODE', label: 'Response Code', value: '2001' },
+    ])
+  })
+
+  it('returns the CivicPlus Pay v2 error code', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'CP_PAY',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+        // @ts-expect-error incomplete because type is large
+        paymentTransaction: {
+          cpPayVersion: 'v2',
+          result: {
+            errorCode: 'CardDeclined',
+          },
+        },
+      }),
+    ).toEqual([
+      {
+        key: 'CP_PAY_ERROR_CODE',
+        label: 'Response Code',
+        value: 'CardDeclined',
+      },
+    ])
+  })
+
+  it('returns only the stored message for NSW Gov Pay', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'NSW_GOV_PAY',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        message: 'Payment Cancelled',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+      }),
+    ).toEqual([
+      { key: 'MESSAGE', label: 'Message', value: 'Payment Cancelled' },
+    ])
+  })
+})
+
 describe('getFormStorePaymentFromFormSubmissionPayment', () => {
   describe('NSW Gov Pay', () => {
     it('returns status, payment reference and completion reference when completed', () => {

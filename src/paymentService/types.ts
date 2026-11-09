@@ -25,6 +25,13 @@ export type PaymentDisplayFormatters = Pick<
   'formatCurrency' | 'formatDate' | 'formatDateTime'
 >
 
+export type PaymentFailureDetail = {
+  label: string
+  value: string
+  /** A unique key across payment providers to identify the failure detail. */
+  key: string
+}
+
 /**
  * Pure transforms for a payment provider. Implementations must not perform
  * HTTP or other I/O — they only accept known types and return values.
@@ -37,4 +44,6 @@ export interface PaymentProvider<
     formSubmissionPayment: T,
     formatters: PaymentDisplayFormatters,
   ): PaymentDisplayDetailsResult | undefined
+  /** Provider response fields for a payment that did not succeed. */
+  getFailureDetails(formSubmissionPayment: T): PaymentFailureDetail[]
 }

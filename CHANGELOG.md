@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `paymentService.getFailureDetailsFromFormSubmissionPayment()` for the stored failure message and each provider's response fields
+
 ### Fixed
 
 - `npm audit fix`

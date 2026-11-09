@@ -3,6 +3,7 @@ import {
   FormStorePayment,
   PaymentDisplayDetailsResult,
   PaymentDisplayFormatters,
+  PaymentFailureDetail,
   PaymentProvider,
 } from '../types.js'
 
@@ -28,10 +29,7 @@ function getFormStorePayment(
 
 function getDisplayDetails(
   formSubmissionPayment: BPOINTFormSubmissionPayment,
-  {
-    formatCurrency,
-    formatDateTime,
-  }: PaymentDisplayFormatters,
+  { formatCurrency, formatDateTime }: PaymentDisplayFormatters,
 ): PaymentDisplayDetailsResult | undefined {
   const { paymentTransaction } = formSubmissionPayment
   if (!paymentTransaction) {
@@ -94,9 +92,36 @@ function getDisplayDetails(
   }
 }
 
+function getFailureDetails(
+  formSubmissionPayment: BPOINTFormSubmissionPayment,
+): PaymentFailureDetail[] {
+  const { paymentTransaction } = formSubmissionPayment
+  if (!paymentTransaction) {
+    return []
+  }
+
+  const details: PaymentFailureDetail[] = []
+  if (paymentTransaction.ResponseText) {
+    details.push({
+      key: 'BPOINT_RESPONSE_TEXT',
+      label: 'Response',
+      value: paymentTransaction.ResponseText,
+    })
+  }
+  if (paymentTransaction.ResponseCode) {
+    details.push({
+      key: 'BPOINT_RESPONSE_CODE',
+      label: 'Response Code',
+      value: paymentTransaction.ResponseCode,
+    })
+  }
+  return details
+}
+
 const bpointPaymentProvider: PaymentProvider<BPOINTFormSubmissionPayment> = {
   getFormStorePayment,
   getDisplayDetails,
+  getFailureDetails,
 }
 
 export default bpointPaymentProvider

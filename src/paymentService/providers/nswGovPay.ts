@@ -3,6 +3,7 @@ import {
   FormStorePayment,
   PaymentDisplayDetailsResult,
   PaymentDisplayFormatters,
+  PaymentFailureDetail,
   PaymentProvider,
 } from '../types.js'
 
@@ -29,10 +30,7 @@ function getFormStorePayment(
 
 function getDisplayDetails(
   formSubmissionPayment: NSWGovPayFormSubmissionPayment,
-  {
-    formatCurrency,
-    formatDateTime,
-  }: PaymentDisplayFormatters,
+  { formatCurrency, formatDateTime }: PaymentDisplayFormatters,
 ): PaymentDisplayDetailsResult | undefined {
   const { paymentTransaction } = formSubmissionPayment
   if (!paymentTransaction || !paymentTransaction.agencyCompletionPayment) {
@@ -75,8 +73,7 @@ function getDisplayDetails(
             {
               key: 'NSW_GOV_PAY_BPAY_BILLER_CODE' as const,
               label: 'BPay Biller Code',
-              value:
-                paymentTransaction.agencyCompletionPayment.bPay.billerCode,
+              value: paymentTransaction.agencyCompletionPayment.bPay.billerCode,
             },
           ]
         : []),
@@ -117,10 +114,16 @@ function getDisplayDetails(
   }
 }
 
+/** NSW Gov Pay records a failure reason on `message`, not the transaction. */
+function getFailureDetails(): PaymentFailureDetail[] {
+  return []
+}
+
 const nswGovPayPaymentProvider: PaymentProvider<NSWGovPayFormSubmissionPayment> =
   {
     getFormStorePayment,
     getDisplayDetails,
+    getFailureDetails,
   }
 
 export default nswGovPayPaymentProvider
