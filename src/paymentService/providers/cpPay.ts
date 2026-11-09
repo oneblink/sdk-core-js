@@ -4,6 +4,7 @@ import {
   PaymentDisplayDetail,
   PaymentDisplayDetailsResult,
   PaymentDisplayFormatters,
+  PaymentFailureDetail,
   PaymentProvider,
 } from '../types.js'
 
@@ -146,9 +147,48 @@ function getDisplayDetails(
   }
 }
 
+function getFailureDetails(
+  formSubmissionPayment: CPPayFormSubmissionPayment,
+): PaymentFailureDetail[] {
+  const { paymentTransaction } = formSubmissionPayment
+  if (!paymentTransaction) {
+    return []
+  }
+
+  const details: PaymentFailureDetail[] = []
+  if (paymentTransaction.cpPayVersion === 'v2') {
+    const { errorCode } = paymentTransaction.result
+    if (errorCode && errorCode !== 'NoError') {
+      details.push({
+        key: 'CP_PAY_ERROR_CODE',
+        label: 'Response Code',
+        value: errorCode,
+      })
+    }
+    return details
+  }
+
+  if (paymentTransaction.errorMessage) {
+    details.push({
+      key: 'CP_PAY_ERROR_MESSAGE',
+      label: 'Response',
+      value: paymentTransaction.errorMessage,
+    })
+  }
+  if (paymentTransaction.errorCode != null) {
+    details.push({
+      key: 'CP_PAY_ERROR_CODE',
+      label: 'Response Code',
+      value: String(paymentTransaction.errorCode),
+    })
+  }
+  return details
+}
+
 const cpPayPaymentProvider: PaymentProvider<CPPayFormSubmissionPayment> = {
   getFormStorePayment,
   getDisplayDetails,
+  getFailureDetails,
 }
 
 export default cpPayPaymentProvider

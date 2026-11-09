@@ -3,6 +3,7 @@ import {
   FormStorePayment,
   PaymentDisplayDetailsResult,
   PaymentDisplayFormatters,
+  PaymentFailureDetail,
   PaymentProvider,
 } from '../types.js'
 
@@ -87,10 +88,37 @@ function getDisplayDetails(
   }
 }
 
+function getFailureDetails(
+  formSubmissionPayment: WestpacQuickStreamFormSubmissionPayment,
+): PaymentFailureDetail[] {
+  const { paymentTransaction } = formSubmissionPayment
+  if (!paymentTransaction) {
+    return []
+  }
+
+  const details: PaymentFailureDetail[] = []
+  if (paymentTransaction.responseDescription) {
+    details.push({
+      key: 'WESTPAC_QUICK_STREAM_RESPONSE_DESCRIPTION',
+      label: 'Response',
+      value: paymentTransaction.responseDescription,
+    })
+  }
+  if (paymentTransaction.responseCode) {
+    details.push({
+      key: 'WESTPAC_QUICK_STREAM_RESPONSE_CODE',
+      label: 'Response Code',
+      value: paymentTransaction.responseCode,
+    })
+  }
+  return details
+}
+
 const westpacQuickStreamPaymentProvider: PaymentProvider<WestpacQuickStreamFormSubmissionPayment> =
   {
     getFormStorePayment,
     getDisplayDetails,
+    getFailureDetails,
   }
 
 export default westpacQuickStreamPaymentProvider

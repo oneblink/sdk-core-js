@@ -21,6 +21,7 @@ import type {
   PaymentDisplayDetail,
   PaymentDisplayFormatters,
   PaymentDisplayDetailsResult,
+  PaymentFailureDetail,
 } from './paymentService/types.js'
 
 export {
@@ -28,6 +29,7 @@ export {
   PaymentDisplayDetail,
   PaymentDisplayDetailsResult,
   PaymentDisplayFormatters,
+  PaymentFailureDetail,
 }
 
 /**
@@ -303,6 +305,46 @@ export const getDisplayDetailsFromFormSubmissionPayment = (
  * @param formSubmissionPayment
  * @returns
  */
+/**
+ * Retrieve the provider's failure details for a form submission payment.
+ * Includes the stored failure message, then the response fields for that
+ * payment's provider. Returns an empty array unless the payment failed.
+ *
+ * #### Example
+ *
+ * ```js
+ * const failureDetails =
+ *   paymentService.getFailureDetailsFromFormSubmissionPayment(
+ *     formSubmissionPayment,
+ *   )
+ * ```
+ *
+ * @param formSubmissionPayment
+ * @returns
+ */
+export function getFailureDetailsFromFormSubmissionPayment(
+  formSubmissionPayment: SubmissionTypes.FormSubmissionPayment,
+): PaymentFailureDetail[] {
+  if (formSubmissionPayment.status !== 'FAILED') {
+    return []
+  }
+
+  const details: PaymentFailureDetail[] = []
+  if (formSubmissionPayment.message) {
+    details.push({
+      key: 'MESSAGE',
+      label: 'Message',
+      value: formSubmissionPayment.message,
+    })
+  }
+  details.push(
+    ...getPaymentProvider(formSubmissionPayment.type).getFailureDetails(
+      formSubmissionPayment,
+    ),
+  )
+  return details
+}
+
 export function getFormStorePaymentFromFormSubmissionPayment(
   formSubmissionPayment: SubmissionTypes.FormSubmissionPayment,
 ): FormStorePayment {
