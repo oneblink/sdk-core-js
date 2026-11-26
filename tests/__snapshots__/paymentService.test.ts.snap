@@ -194,6 +194,52 @@ exports[`getDisplayDetailsFromFormSubmissionPayment > NSW Gov Pay > gets the cor
 }
 `;
 
+exports[`getDisplayDetailsFromFormSubmissionPayment > Stripe > gets the correct details 1`] = `
+{
+  "amount": {
+    "formatted": "$123.45",
+    "value": 123.45,
+  },
+  "paymentDisplayDetails": [
+    {
+      "key": "STRIPE_CHECKOUT_SESSION_ID",
+      "label": "Checkout Session ID",
+      "value": "cs_test_123",
+    },
+    {
+      "key": "STRIPE_PAYMENT_INTENT_ID",
+      "label": "Payment Intent ID",
+      "value": "pi_test_123",
+    },
+    {
+      "key": "STRIPE_CUSTOMER_EMAIL",
+      "label": "Customer Email",
+      "value": "customer@example.com",
+    },
+    {
+      "key": "STRIPE_CARD_BRAND",
+      "label": "Card Brand",
+      "value": "visa",
+    },
+    {
+      "key": "STRIPE_CREDIT_CARD_MASK",
+      "label": "Card Number",
+      "value": "xxxx xxxx xxxx 4242",
+    },
+    {
+      "key": "STRIPE_AMOUNT",
+      "label": "Amount",
+      "value": "$123.45",
+    },
+    {
+      "key": "STRIPE_CREATED_DATE_TIME",
+      "label": "Created Date Time",
+      "value": "11/09/2024 12:00:00 PM",
+    },
+  ],
+}
+`;
+
 exports[`getDisplayDetailsFromFormSubmissionPayment > Westpac > gets the correct details 1`] = `
 {
   "amount": {

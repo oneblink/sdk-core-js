@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Stripe support to `paymentService` display details and form store payment
+
 ## [10.3.0] - 2026-11-17
 
 ### Added
