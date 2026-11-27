@@ -284,6 +284,59 @@ describe('checkForPaymentEvent', () => {
   })
 })
 
+const stripeFormSubmissionPayment: Extract<
+  SubmissionTypes.FormSubmissionPayment,
+  { type: 'STRIPE' }
+> = {
+  type: 'STRIPE',
+  id: '1',
+  createdAt: '2024-09-11T12:00:00.000Z',
+  formId: 1,
+  status: 'SUCCEEDED',
+  submissionId: '111111111111',
+  updatedAt: '2024-09-11T12:00:00.000Z',
+  paymentTransaction: {
+    redirectUrl: 'redirectUrl',
+    integrationEnvironmentId: '1',
+    checkoutSessionId: 'cs_test_123',
+    checkoutSession: {
+      id: 'cs_test_123',
+      object: 'checkout.session',
+      amount_total: 12345,
+      currency: 'usd',
+      created: 1726056000,
+      customer_details: {
+        email: 'customer@example.com',
+        name: 'Customer',
+      },
+      livemode: false,
+      payment_status: 'paid',
+      status: 'complete',
+      payment_intent: {
+        id: 'pi_test_123',
+        object: 'payment_intent',
+        amount_received: 12345,
+        created: 1726056000,
+        status: 'succeeded',
+        latest_charge: {
+          id: 'ch_test_123',
+          object: 'charge',
+          amount: 12345,
+          created: 1726056000,
+          status: 'succeeded',
+          payment_method_details: {
+            type: 'card',
+            card: {
+              brand: 'visa',
+              last4: '4242',
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
 describe('getDisplayDetailsFromFormSubmissionPayment', () => {
   const formatters = {
     formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
@@ -491,6 +544,65 @@ describe('getDisplayDetailsFromFormSubmissionPayment', () => {
       expect(details).toMatchSnapshot()
     })
   })
+
+  describe('Stripe', () => {
+    it('gets the correct details', () => {
+      const details = paymentService.getDisplayDetailsFromFormSubmissionPayment(
+        stripeFormSubmissionPayment,
+        formatters,
+      )
+      expect(details).toMatchSnapshot()
+    })
+
+    it('omits optional details missing from the Checkout Session', () => {
+      const paymentTransaction = stripeFormSubmissionPayment.paymentTransaction
+      const checkoutSession = paymentTransaction?.checkoutSession
+      if (!paymentTransaction || !checkoutSession) {
+        throw new Error('Expected Stripe checkoutSession')
+      }
+      const details = paymentService.getDisplayDetailsFromFormSubmissionPayment(
+        {
+          ...stripeFormSubmissionPayment,
+          paymentTransaction: {
+            ...paymentTransaction,
+            checkoutSession: {
+              ...checkoutSession,
+              customer_details: null,
+              payment_intent: {
+                ...checkoutSession.payment_intent,
+                latest_charge: {
+                  ...checkoutSession.payment_intent.latest_charge,
+                  payment_method_details: null,
+                },
+              },
+            },
+          },
+        },
+        formatters,
+      )
+      expect(details?.paymentDisplayDetails.map(({ key }) => key)).toEqual([
+        'STRIPE_CHECKOUT_SESSION_ID',
+        'STRIPE_PAYMENT_INTENT_ID',
+        'STRIPE_AMOUNT',
+        'STRIPE_CREATED_DATE_TIME',
+      ])
+    })
+
+    it('returns undefined before the payment is completed', () => {
+      const details = paymentService.getDisplayDetailsFromFormSubmissionPayment(
+        {
+          ...stripeFormSubmissionPayment,
+          paymentTransaction: {
+            redirectUrl: 'redirectUrl',
+            integrationEnvironmentId: '1',
+            checkoutSessionId: 'cs_test_123',
+          },
+        },
+        formatters,
+      )
+      expect(details).toBeUndefined()
+    })
+  })
 })
 
 describe('getFailureDetailsFromFormSubmissionPayment', () => {
@@ -619,6 +731,22 @@ describe('getFailureDetailsFromFormSubmissionPayment', () => {
     expect(
       paymentService.getFailureDetailsFromFormSubmissionPayment({
         type: 'NSW_GOV_PAY',
+        id: '1',
+        createdAt: '2024-09-11T12:00:00.000Z',
+        formId: 1,
+        status: 'FAILED',
+        message: 'Payment Cancelled',
+        submissionId: '111111111111',
+        updatedAt: '2024-09-11T12:00:00.000Z',
+      }),
+    ).toEqual([
+      { key: 'MESSAGE', label: 'Message', value: 'Payment Cancelled' },
+    ])
+  })
+  it('returns only the stored message for Stripe', () => {
+    expect(
+      paymentService.getFailureDetailsFromFormSubmissionPayment({
+        type: 'STRIPE',
         id: '1',
         createdAt: '2024-09-11T12:00:00.000Z',
         formId: 1,
@@ -844,6 +972,37 @@ describe('getFormStorePaymentFromFormSubmissionPayment', () => {
         status: 'SUCCEEDED',
         providerTransactionId: 'paymentReferenceNumber',
         providerReceiptNumber: 'westpac-receipt',
+      })
+    })
+  })
+
+  describe('Stripe', () => {
+    it('returns status, payment intent id and charge id when completed', () => {
+      expect(
+        paymentService.getFormStorePaymentFromFormSubmissionPayment(
+          stripeFormSubmissionPayment,
+        ),
+      ).toEqual({
+        status: 'SUCCEEDED',
+        providerTransactionId: 'pi_test_123',
+        providerReceiptNumber: 'ch_test_123',
+      })
+    })
+
+    it('returns status and checkout session id when not completed', () => {
+      expect(
+        paymentService.getFormStorePaymentFromFormSubmissionPayment({
+          ...stripeFormSubmissionPayment,
+          status: 'PENDING',
+          paymentTransaction: {
+            redirectUrl: 'redirectUrl',
+            integrationEnvironmentId: '1',
+            checkoutSessionId: 'cs_test_123',
+          },
+        }),
+      ).toEqual({
+        status: 'PENDING',
+        providerTransactionId: 'cs_test_123',
       })
     })
   })

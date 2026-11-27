@@ -3,6 +3,7 @@ import { PaymentProvider } from './types.js'
 import bpointPaymentProvider from './providers/bpoint.js'
 import cpPayPaymentProvider from './providers/cpPay.js'
 import nswGovPayPaymentProvider from './providers/nswGovPay.js'
+import stripePaymentProvider from './providers/stripe.js'
 import westpacQuickStreamPaymentProvider from './providers/westpacQuickStream.js'
 
 const paymentProvidersMap: Record<
@@ -12,6 +13,7 @@ const paymentProvidersMap: Record<
   BPOINT: bpointPaymentProvider,
   CP_PAY: cpPayPaymentProvider,
   NSW_GOV_PAY: nswGovPayPaymentProvider,
+  STRIPE: stripePaymentProvider,
   WESTPAC_QUICK_STREAM: westpacQuickStreamPaymentProvider,
 }
 

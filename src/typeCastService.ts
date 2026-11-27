@@ -235,7 +235,8 @@ const toPaymentSubmissionEvent = (
     case 'BPOINT':
     case 'CP_PAY':
     case 'WESTPAC_QUICK_STREAM':
-    case 'NSW_GOV_PAY': {
+    case 'NSW_GOV_PAY':
+    case 'STRIPE': {
       return e
     }
     default: {
